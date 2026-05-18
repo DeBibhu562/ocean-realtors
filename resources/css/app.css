@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply font-sans text-primary bg-white antialiased selection:bg-accent/30 selection:text-primary;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/20 rounded-full transition-colors hover:bg-primary/30;
+  }
+}
+
+@layer components {
+  .badge-rent {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-accent text-white uppercase tracking-wider;
+  }
+  
+  .badge-sale {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary text-white uppercase tracking-wider;
+  }
+  
+  .badge-featured {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary text-white shadow-lg uppercase tracking-wider;
+  }
+
+  .nav-link {
+    @apply text-primary/70 hover:text-primary font-medium transition-colors duration-200 relative py-2;
+  }
+
+  .nav-link-active {
+    @apply text-primary font-bold after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-accent;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+  
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+  }
+}
