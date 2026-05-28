@@ -12,7 +12,6 @@ const tabs = [
     { label: 'All', value: '' },
     { label: 'Apartment', value: 'apartment' },
     { label: 'Builder Floor', value: 'builder_floor' },
-    { label: 'House', value: 'house' },
     { label: 'Plot', value: 'plot' },
     { label: 'Villa', value: 'villa' },
 ];

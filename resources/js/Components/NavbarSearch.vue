@@ -62,11 +62,11 @@ const selectSuggestion = (s) => {
 </script>
 
 <template>
-    <div class="relative mx-1 flex h-10 min-w-0 max-w-full flex-1 items-center rounded-xl border border-white/10 bg-white shadow-sm transition-all group focus-within:ring-2 focus-within:ring-primary/20 sm:mx-2 md:mx-3 md:h-11 lg:max-w-xl xl:max-w-2xl">
+    <div class="relative flex h-10 w-full min-w-0 max-w-full flex-1 items-center rounded-xl border border-slate-200 bg-white shadow-sm transition-all group focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 md:h-11">
         <div class="relative hidden h-full shrink-0 sm:block">
             <select
                 v-model="filters.city"
-                class="h-full max-w-[7.5rem] cursor-pointer truncate rounded-l-xl border-r border-gray-100 bg-gray-50/50 pl-3 pr-7 text-[10px] font-black uppercase tracking-wide text-navy transition-colors hover:bg-gray-100 focus:border-gray-100 focus:ring-0 md:max-w-[8.5rem] md:pl-4 md:text-[11px] md:tracking-widest"
+                class="h-full max-w-[5.8rem] cursor-pointer truncate rounded-l-xl border-r border-gray-100 bg-gray-50/50 pl-2 pr-5 text-[10px] font-black uppercase tracking-wide text-navy transition-colors hover:bg-gray-100 focus:border-gray-100 focus:ring-0 md:max-w-[8rem] md:pl-3 md:pr-7 md:text-[11px] md:tracking-widest"
             >
                 <option value="">Everywhere</option>
                 <option v-for="c in listedCities" :key="c.name" :value="c.name">
@@ -81,7 +81,7 @@ const selectSuggestion = (s) => {
                 type="text"
                 data-navbar-keyword="true"
                 placeholder="Search locality or project…"
-                class="h-full w-full min-w-0 truncate border-none pl-3 pr-2 text-[12px] font-bold text-navy transition-all placeholder:text-text-muted/60 focus:ring-0 md:pl-4 md:text-[13px]"
+                class="h-full w-full min-w-0 truncate border-none pl-2 pr-1.5 text-[12px] font-bold text-navy transition-all placeholder:text-text-muted/60 focus:ring-0 md:pl-4 md:text-[13px]"
                 autocomplete="off"
                 @input="onKeywordInput"
                 @focus="onKeywordFocus"
@@ -101,7 +101,7 @@ const selectSuggestion = (s) => {
 
         <button
             type="button"
-            class="group flex h-full shrink-0 items-center rounded-r-xl bg-primary px-3.5 text-white shadow-inner transition-all hover:bg-primary-hover sm:px-4 md:px-5"
+            class="group flex h-full shrink-0 items-center rounded-r-xl bg-primary px-2 text-white shadow-inner transition-all hover:bg-primary-hover sm:px-3 md:px-4"
             @click="commitSearch"
         >
             <svg class="h-5 w-5 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

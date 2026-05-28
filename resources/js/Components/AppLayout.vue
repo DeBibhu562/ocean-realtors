@@ -5,7 +5,6 @@ import Footer from './Footer.vue';
 import NewsletterSection from './Home/NewsletterSection.vue';
 import SecondaryNavbar from './SecondaryNavbar.vue';
 import WhatsAppIcon from '@/Components/WhatsAppIcon.vue';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import { siteContact, whatsappUrl } from '@/config/site';
 
 import { usePropertyFilters } from '@/Composables/usePropertyFilters';
@@ -50,11 +49,14 @@ const navLinks = [
         <nav v-else class="sticky top-0 w-full z-[100] bg-white border-b border-border h-14 flex items-center">
             <div class="container max-w-6xl mx-auto px-4 flex items-center justify-between">
                 <!-- Logo -->
-                <Link href="/" class="flex items-center gap-2.5" aria-label="Ocean Realtors home">
-                    <span class="inline-flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 p-1.5 text-primary">
-                        <ApplicationLogo class="h-full w-full fill-current" />
-                    </span>
-                    <span class="text-base font-bold text-text-primary sm:text-lg">Ocean Realtors</span>
+                <Link href="/" class="flex items-center" aria-label="Ocean Realtors home">
+                    <img
+                        src="/img/logo_oceanrealtors.png"
+                        alt="Ocean Realtors"
+                        class="h-8 w-auto object-contain sm:h-9"
+                        loading="eager"
+                        decoding="async"
+                    />
                 </Link>
 
                 <!-- Desktop Nav -->

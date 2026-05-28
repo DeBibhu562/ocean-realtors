@@ -5,7 +5,7 @@ const props = defineProps({
     sort: String
 });
 
-const emit = defineEmits(['update:view', 'update:sort']);
+const emit = defineEmits(['update:sort']);
 
 const sortOptions = [
     { label: 'Newest First', value: 'newest' },
@@ -39,28 +39,11 @@ const sortOptions = [
                 </div>
             </div>
 
-            <!-- View Toggle -->
-            <div class="flex bg-gray-50 p-1 rounded-md border border-border">
-                <button 
-                    @click="emit('update:view', 'grid')"
-                    class="p-1.5 rounded transition-all"
-                    :class="view === 'grid' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'"
-                    title="Grid View"
-                >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                    </svg>
-                </button>
-                <button 
-                    @click="emit('update:view', 'list')"
-                    class="p-1.5 rounded transition-all"
-                    :class="view === 'list' ? 'bg-white text-primary shadow-sm' : 'text-text-muted hover:text-text-primary'"
-                    title="List View"
-                >
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+            <div class="inline-flex items-center gap-1 rounded-md border border-border bg-gray-50 px-2 py-1 text-[11px] font-semibold text-text-muted">
+                <svg class="h-4 w-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Grid view
             </div>
         </div>
     </div>

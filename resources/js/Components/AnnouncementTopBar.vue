@@ -12,7 +12,7 @@ const tagline = "India's No. 1 Property Portal";
         role="region"
         aria-label="Site tagline"
         :class="[
-            'w-full border-b flex items-center justify-center',
+            'relative z-[200] w-full border-b flex items-center justify-center',
             variant === 'dark'
                 ? 'bg-gradient-to-r from-primary via-[#1e4fd4] to-primary border-white/10'
                 : 'bg-gradient-to-r from-navy via-[#1e293b] to-navy border-primary/20',

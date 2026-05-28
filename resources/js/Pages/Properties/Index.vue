@@ -61,8 +61,8 @@ const isMobileFiltersOpen = ref(false);
                     <!-- Main Content -->
                     <main class="flex-1">
                         <ListingToolbar 
-                            v-model:view="viewMode" 
                             v-model:sort="filters.sort"
+                            :view="viewMode"
                             :total="total"
                         />
 
