@@ -138,14 +138,14 @@ const submit = async () => {
 <template>
     <section
         id="enquiry-form"
-        class="scroll-mt-28 rounded-2xl border border-primary/10 bg-white p-6 shadow-premium"
+        class="scroll-mt-24 md:scroll-mt-28 rounded-2xl border border-primary/10 bg-white card-pad shadow-premium"
         aria-label="Property enquiry form"
     >
         <Teleport to="body">
             <ToastNotification v-if="toast.show" :key="toastKey" :message="toast.message" :type="toast.type" />
         </Teleport>
 
-        <div v-if="success" class="flex flex-col items-center py-10 text-center">
+        <div v-if="success" class="flex flex-col items-center py-6 md:py-10 text-center">
             <div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <svg class="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />

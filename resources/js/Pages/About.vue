@@ -1,14 +1,8 @@
 <script setup>
-import { Head } from '@inertiajs/vue3';
 import { AppLayout, BaseButton } from '@/Components';
 import StatsSection from '@/Components/Home/StatsSection.vue';
-import { useSeoMeta } from '@/Composables/useSeoMeta';
-
-const { getMeta } = useSeoMeta();
-const seo = getMeta({
-    title: 'About Us',
-    description: 'Learn more about Ocean Realtors, our mission, our values, and the expert team behind our success.'
-});
+import PageSeoHead from '@/Components/PageSeoHead.vue';
+import { siteContact } from '@/config/site';
 
 const team = [
     { name: 'David Wilson', role: 'CEO & Founder', image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=400', linkedin: '#' },
@@ -22,25 +16,30 @@ const team = [
 ];
 
 const features = [
-    { title: 'Market Leaders', desc: 'Consistently ranked #1 in premium real estate transactions.', icon: '🏆' },
-    { title: 'Global Reach', desc: 'Direct access to an international network of luxury buyers.', icon: '🌍' },
-    { title: 'Expert Valuation', desc: 'Proprietary data models for precise property pricing.', icon: '📊' },
-    { title: 'Seamless Closing', desc: 'Dedicated legal and documentation support for hassle-free deals.', icon: '🔐' },
+    { title: 'Verified listings', desc: 'Every property is checked before it goes live — accurate photos, pricing, and availability.', icon: '✓' },
+    { title: 'NCR specialists', desc: 'Focused on Gurgaon, Delhi, Noida, and surrounding corridors you actually want to live or work in.', icon: '📍' },
+    { title: 'Dedicated agents', desc: 'Named consultants for each listing — call, WhatsApp, or visit our Sector 14 office anytime.', icon: '👥' },
+    { title: 'End-to-end support', desc: 'From site visits to documentation, we guide renters, buyers, and owners through the full process.', icon: '📋' },
 ];
 
 const locations = [
-    { city: 'Mumbai', address: 'Bandra Kurla Complex, Mumbai, MH', phone: '+91 22 1234 5678' },
-    { city: 'Delhi', address: 'Connaught Place, New Delhi, DL', phone: '+91 11 1234 5678' },
-    { city: 'Bangalore', address: 'MG Road, Bangalore, KA', phone: '+91 80 1234 5678' },
+    {
+        city: 'Gurgaon (Head Office)',
+        address: siteContact.address.full,
+        phone: siteContact.phoneDisplay,
+        tel: siteContact.phoneTel,
+        whatsapp: siteContact.whatsapp,
+    },
 ];
 </script>
 
 <template>
     <AppLayout>
-        <Head>
-            <title>{{ seo.title }}</title>
-            <meta name="description" :content="seo.description" />
-        </Head>
+        <PageSeoHead
+            title="About Us"
+            description="Learn about Ocean Realtors — verified listings, NCR expertise, and dedicated agents in Sector 14, Gurgaon."
+            path="/about"
+        />
 
         <!-- Hero Section -->
         <section class="pt-48 pb-32 bg-primary relative overflow-hidden">
@@ -58,7 +57,7 @@ const locations = [
         </section>
 
         <!-- Mission -->
-        <section class="py-24 bg-white">
+        <section class="section-y bg-white">
             <div class="container mx-auto px-6">
                 <div class="max-w-4xl mx-auto text-center">
                     <div class="text-6xl text-accent/20 mb-8 font-serif leading-none">"</div>
@@ -74,7 +73,7 @@ const locations = [
         <StatsSection class="!bg-surface-gray border-y border-gray-100" />
 
         <!-- Why Choose Us -->
-        <section class="py-24 bg-white">
+        <section class="section-y bg-white">
             <div class="container mx-auto px-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                     <div v-for="f in features" :key="f.title" class="p-10 rounded-[2.5rem] bg-surface-gray border border-gray-50 hover:border-accent hover:bg-white hover:shadow-premium transition-all duration-300">
@@ -87,7 +86,7 @@ const locations = [
         </section>
 
         <!-- Team Grid -->
-        <section class="py-24 bg-surface-gray">
+        <section class="section-y bg-surface-gray">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl md:text-5xl font-black text-primary italic uppercase tracking-tighter mb-4">
@@ -114,7 +113,7 @@ const locations = [
         </section>
 
         <!-- Trust Badges -->
-        <section class="py-16 bg-white border-y border-gray-100">
+        <section class="section-y-sm bg-white border-y border-gray-100">
             <div class="container mx-auto px-6">
                 <div class="flex flex-wrap justify-center items-center gap-16 grayscale opacity-30 hover:grayscale-0 transition-all">
                     <div v-for="i in 5" :key="i" class="w-32 h-16 bg-gray-200 rounded-xl flex items-center justify-center font-black text-xs">LOGO {{ i }}</div>
@@ -123,19 +122,30 @@ const locations = [
         </section>
 
         <!-- Office Locations -->
-        <section class="py-24 bg-white">
+        <section class="section-y bg-white">
             <div class="container mx-auto px-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                <div class="max-w-xl mx-auto">
                     <div v-for="loc in locations" :key="loc.city" class="p-10 rounded-[2.5rem] bg-primary text-white shadow-2xl relative overflow-hidden group">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700"></div>
-                        <h3 class="text-3xl font-black italic uppercase tracking-tighter mb-6 text-accent">{{ loc.city }}</h3>
-                        <p class="text-white/60 mb-8 font-bold leading-relaxed">{{ loc.address }}</p>
-                        <div class="space-y-2 mb-10">
-                            <p class="font-bold flex items-center"><span class="mr-3 opacity-50">📞</span> {{ loc.phone }}</p>
+                        <h3 class="text-2xl font-black mb-4 text-accent">{{ loc.city }}</h3>
+                        <p class="text-white/70 mb-6 leading-relaxed">{{ loc.address }}</p>
+                        <div class="space-y-2 mb-8 text-sm">
+                            <p class="font-semibold flex items-center gap-2">
+                                <span class="opacity-50">📞</span>
+                                <a :href="`tel:${loc.tel}`" class="hover:text-accent">{{ loc.phone }}</a>
+                            </p>
+                            <p class="font-semibold flex items-center gap-2">
+                                <span class="opacity-50">💬</span>
+                                <a :href="`https://wa.me/${loc.whatsapp}`" target="_blank" rel="noopener" class="hover:text-accent">WhatsApp</a>
+                            </p>
                         </div>
-                        <BaseButton variant="outline" size="sm" class="!border-white/20 !text-white hover:!bg-white hover:!text-primary">
-                            Get Directions
-                        </BaseButton>
+                        <a
+                            :href="siteContact.mapEmbedUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex px-5 py-2.5 rounded-xl border border-white/20 text-sm font-bold hover:bg-white hover:text-primary transition-colors"
+                        >
+                            Get directions
+                        </a>
                     </div>
                 </div>
             </div>

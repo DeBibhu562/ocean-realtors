@@ -1,11 +1,15 @@
 <x-mail::message>
 # New enquiry received
 
-**Property:** {{ $lead->property->title ?? 'N/A' }}
+**Source:** {{ ucfirst($lead->source ?? 'web') }}
+
+**Property:** {{ $lead->property?->title ?? 'General enquiry (no specific listing)' }}
 
 **From:** {{ $lead->name }}
 
+@if($lead->email)
 **Email:** {{ $lead->email }}
+@endif
 
 **Phone:** {{ $lead->phone }}
 
@@ -17,7 +21,7 @@
 
 {{ $lead->message ?: '—' }}
 
-<x-mail::button :url="url('/property/'.$lead->property_id)">
+<x-mail::button :url="$lead->property ? url('/'.$lead->property->slug) : url('/properties')">
 View listing
 </x-mail::button>
 

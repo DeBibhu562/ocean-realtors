@@ -15,13 +15,17 @@ class NewLeadMail extends Mailable
 
     public function __construct(public Lead $lead)
     {
-        $this->lead->loadMissing(['property']);
+        $this->lead->loadMissing(['property', 'agent']);
     }
 
     public function envelope(): Envelope
     {
+        $subject = $this->lead->source === 'chatbot'
+            ? 'New chatbot lead: '.$this->lead->name
+            : 'New property enquiry: '.($this->lead->property?->title ?? 'General');
+
         return new Envelope(
-            subject: 'New property enquiry: '.$this->lead->property?->title,
+            subject: $subject,
         );
     }
 

@@ -1,6 +1,7 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import SiteLogo from '@/Components/SiteLogo.vue';
 
 const page = usePage();
 const user = computed(() => page.props.auth.user);
@@ -14,9 +15,7 @@ const user = computed(() => page.props.auth.user);
             <span class="icon_close"></span>
         </div>
         <div class="logo">
-            <Link href="/">
-                <img src="/img/logo.png" alt="">
-            </Link>
+            <SiteLogo size="md" theme="light" />
         </div>
         <div id="mobile-menu-wrap"></div>
         <div class="om-widget">
@@ -43,7 +42,7 @@ const user = computed(() => page.props.auth.user);
                 <div class="row">
                     <div class="col-lg-2">
                         <div class="logo">
-                            <Link href="/"><img src="/img/logo.png" alt=""></Link>
+                            <SiteLogo size="md" theme="light" />
                         </div>
                     </div>
                     <div class="col-lg-10">
@@ -70,7 +69,7 @@ const user = computed(() => page.props.auth.user);
                                 <li :class="{ active: $page.url === '/' }"><Link href="/">Home</Link></li>
                                 <li><a href="#">Properties</a>
                                     <ul class="dropdown">
-                                        <li><Link href="/property">Property Grid</Link></li>
+                                        <li><Link :href="route('properties.index')">Property Grid</Link></li>
                                         <li><Link href="/profile">Property List</Link></li>
                                     </ul>
                                 </li>

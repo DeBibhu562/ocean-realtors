@@ -1,0 +1,16 @@
+{
+  "areas": [
+    "South Delhi",
+    "Central Delhi",
+    "Dwarka",
+    "Rohini",
+    "Connaught Place",
+    "Karol Bagh",
+    "Vasant Kunj"
+  ],
+  "localities": {
+    "South Delhi": ["Greater Kailash", "Defence Colony", "Hauz Khas"],
+    "Dwarka": ["Sector 10", "Sector 12", "Sector 21"],
+    "Central Delhi": ["Connaught Place", "Karol Bagh"]
+  }
+}

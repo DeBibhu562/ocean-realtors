@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Agent;
 use App\Models\Property;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -10,8 +11,13 @@ class PropertySeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::first();
-        if (!$admin) return;
+        $admin = User::where('is_admin', true)->first() ?? User::first();
+        if (! $admin) {
+            return;
+        }
+
+        $agentIds = Agent::active()->pluck('id')->all();
+        $agentIndex = 0;
 
         $properties = [
             [
@@ -76,6 +82,8 @@ class PropertySeeder extends Seeder
 
         foreach ($properties as $data) {
             $data['user_id'] = $admin->id;
+            $data['agent_id'] = $agentIds[$agentIndex % max(count($agentIds), 1)] ?? null;
+            $agentIndex++;
             $data['image'] = $data['photos'][0];
             Property::create($data);
         }

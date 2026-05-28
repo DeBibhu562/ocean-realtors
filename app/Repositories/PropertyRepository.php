@@ -3,17 +3,22 @@
 namespace App\Repositories;
 
 use App\Models\Property;
+use App\Support\AgentPresenter;
+use App\Support\ListingImage;
+use App\Support\LocationDataLoader;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class PropertyRepository
 {
     /** @var array<string, list<string>> */
     protected array $typePatterns = [
         'apartment' => ['apartment', 'flat'],
-        'house' => ['house', 'independent', 'floor', 'bungalow'],
+        'builder_floor' => ['builder floor', 'builder_floor'],
+        'house' => ['house', 'independent', 'bungalow'],
         'villa' => ['villa'],
         'office' => ['office', 'commercial', 'shop', 'retail'],
         'commercial' => ['commercial', 'office', 'shop', 'retail'],
@@ -23,7 +28,7 @@ class PropertyRepository
 
     public function paginatedForListing(Request $request): LengthAwarePaginator
     {
-        $query = Property::query()->with('user');
+        $query = Property::query()->with(['agent', 'user']);
 
         $this->applyFilters($query, $request);
 
@@ -43,10 +48,43 @@ class PropertyRepository
         return $paginator;
     }
 
+    public function featuredForHomepage(?string $type = null, int $limit = 6): Collection
+    {
+        $query = Property::query()
+            ->with(['agent', 'user'])
+            ->where('is_featured', true);
+
+        if (Schema::hasColumn('properties', 'listing_status')) {
+            $query->where('listing_status', 'Active');
+        }
+
+        if ($type !== null && $type !== '') {
+            $patterns = $this->typePatterns[strtolower($type)] ?? [strtolower($type)];
+            $query->where(function (Builder $q) use ($patterns) {
+                $first = true;
+                foreach ($patterns as $pattern) {
+                    $like = '%'.addcslashes($pattern, '%_\\').'%';
+                    if ($first) {
+                        $q->whereRaw('LOWER(`type`) LIKE ?', [$like]);
+                        $first = false;
+                    } else {
+                        $q->orWhereRaw('LOWER(`type`) LIKE ?', [$like]);
+                    }
+                }
+            });
+        }
+
+        return $query
+            ->latest()
+            ->limit($limit)
+            ->get()
+            ->map(fn (Property $p) => $this->toCard($p));
+    }
+
     public function similar(Property $property, int $limit = 6): Collection
     {
         $list = Property::query()
-            ->with('user')
+            ->with(['agent', 'user'])
             ->where('id', '!=', $property->id)
             ->where('city', $property->city)
             ->latest()
@@ -56,7 +94,7 @@ class PropertyRepository
         if ($list->count() < $limit) {
             $needed = $limit - $list->count();
             $more = Property::query()
-                ->with('user')
+                ->with(['agent', 'user'])
                 ->where('id', '!=', $property->id)
                 ->whereNotIn('id', $list->pluck('id'))
                 ->latest()
@@ -188,29 +226,163 @@ class PropertyRepository
 
     public function toCard(Property $property): array
     {
-        $user = $property->user;
         $area = $property->built_up_area ?? $property->size ?? 0;
         $statusSlug = $this->statusSlug($property);
+        $images = ListingImage::forCard($property->image);
+        $agent = AgentPresenter::forProperty($property->agent);
 
         return [
             'id' => $property->id,
+            'slug' => $property->slug,
             'title' => $property->title,
             'address' => $property->address,
             'city' => $property->city,
+            'society_name' => $property->society_name,
             'price' => (float) $property->price,
             'type' => $property->type,
             'status' => $statusSlug,
+            'is_rental' => $statusSlug === 'rent',
             'beds' => (int) $property->bedrooms,
             'baths' => (int) $property->bathrooms,
             'area' => (float) $area,
-            'image' => $property->image,
+            'bhk' => $property->bhk,
+            'image' => $images['image'],
+            'image_srcset' => $images['image_srcset'],
             'isFeatured' => (bool) $property->is_featured,
-            'agent' => [
-                'name' => $user?->name,
-                'phone' => $user?->phone,
-                'avatar' => $user?->avatar,
-            ],
+            'description_preview' => $property->description
+                ? \Illuminate\Support\Str::limit(strip_tags((string) $property->description), 120)
+                : null,
+            'agent' => $agent,
         ];
+    }
+
+    /**
+     * @return Collection<int, array{name: string, count: int}>
+     */
+    public function listedAreas(string $city): Collection
+    {
+        $city = LocationDataLoader::canonicalCity($city);
+        if ($city === '') {
+            return collect();
+        }
+
+        $counts = [];
+        Property::query()
+            ->select('city', 'area')
+            ->whereNotNull('area')
+            ->where('area', '!=', '')
+            ->get()
+            ->each(function (Property $row) use ($city, &$counts) {
+                if (LocationDataLoader::canonicalCity((string) $row->city) !== $city) {
+                    return;
+                }
+                $name = trim((string) $row->area);
+                if ($name === '') {
+                    return;
+                }
+                $counts[$name] = ($counts[$name] ?? 0) + 1;
+            });
+
+        $curated = collect(LocationDataLoader::curatedForCity($city)['areas']);
+
+        return $curated
+            ->merge(array_keys($counts))
+            ->unique()
+            ->values()
+            ->map(fn (string $name) => [
+                'name' => $name,
+                'count' => (int) ($counts[$name] ?? 0),
+            ])
+            ->sortByDesc('count')
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, array{name: string, count: int}>
+     */
+    public function listedLocalities(string $city, ?string $area = null): Collection
+    {
+        $city = LocationDataLoader::canonicalCity($city);
+        if ($city === '') {
+            return collect();
+        }
+
+        $area = $area ? trim($area) : null;
+        $curated = LocationDataLoader::curatedForCity($city);
+        $curatedNames = collect();
+
+        if ($area) {
+            $curatedNames = collect($curated['localities'][$area] ?? []);
+        } else {
+            foreach ($curated['localities'] as $items) {
+                $curatedNames = $curatedNames->merge($items);
+            }
+        }
+
+        $counts = [];
+        $query = Property::query()
+            ->select('city', 'area', 'locality')
+            ->whereNotNull('locality')
+            ->where('locality', '!=', '');
+
+        if ($area) {
+            $query->where('area', $area);
+        }
+
+        $query->get()->each(function (Property $row) use ($city, &$counts) {
+            if (LocationDataLoader::canonicalCity((string) $row->city) !== $city) {
+                return;
+            }
+            $name = trim((string) $row->locality);
+            if ($name === '') {
+                return;
+            }
+            $counts[$name] = ($counts[$name] ?? 0) + 1;
+        });
+
+        return $curatedNames
+            ->merge(array_keys($counts))
+            ->unique()
+            ->values()
+            ->map(fn (string $name) => [
+                'name' => $name,
+                'count' => (int) ($counts[$name] ?? 0),
+            ])
+            ->sortByDesc('count')
+            ->values();
+    }
+
+    public function listedCities(): Collection
+    {
+        $fromDb = Property::query()
+            ->selectRaw('city, COUNT(*) as listing_count')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->groupBy('city')
+            ->orderByDesc('listing_count')
+            ->get()
+            ->mapWithKeys(fn ($row) => [
+                LocationDataLoader::canonicalCity((string) $row->city) => (int) $row->listing_count,
+            ]);
+
+        $merged = collect();
+        foreach (LocationDataLoader::curatedCities() as $city) {
+            $merged->push([
+                'name' => $city,
+                'count' => (int) ($fromDb[$city] ?? 0),
+            ]);
+        }
+
+        foreach ($fromDb as $city => $count) {
+            if ($merged->contains(fn (array $row) => $row['name'] === $city)) {
+                continue;
+            }
+            $merged->push(['name' => $city, 'count' => $count]);
+        }
+
+        return $merged
+            ->sortByDesc('count')
+            ->values();
     }
 
     public function suggestLocations(?string $query = null): Collection

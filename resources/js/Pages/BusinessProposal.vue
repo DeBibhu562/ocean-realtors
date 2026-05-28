@@ -1,64 +1,69 @@
 <script setup>
 import AppLayout from '@/Components/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import StaticPageHero from '@/Components/StaticPageHero.vue';
+import { Link } from '@inertiajs/vue3';
+import PageSeoHead from '@/Components/PageSeoHead.vue';
+import { siteContact } from '@/config/site';
 
-const steps = [
-    { title: 'Digital Transformation', desc: 'Migrate your offline inventory to our high-performance digital ecosystem.' },
-    { title: 'Targeted Outreach', desc: 'Reach thousands of verified buyers through our AI-driven matching algorithms.' },
-    { title: 'Lead Automation', desc: 'Receive real-time notifications and manage leads through a centralized dashboard.' },
+const benefits = [
+    { title: 'Verified digital listings', desc: 'Professional photos, watermarked branding, and structured data for rent, sale, and commercial inventory.' },
+    { title: 'Qualified leads', desc: 'Enquiries go to your assigned agent with property context — name, phone, and message in one place.' },
+    { title: 'NCR visibility', desc: 'Reach buyers and tenants searching Gurgaon, Delhi, Noida, and nearby markets.' },
+    { title: 'Dedicated support', desc: 'Onboarding help from our Sector 14 team — upload, pricing guidance, and listing optimisation.' },
 ];
 </script>
 
 <template>
     <AppLayout title="Business Proposal">
-        <Head title="Business Proposal" />
-        
-        <div class="bg-white min-h-screen">
-            <!-- Hero -->
-            <section class="bg-primary py-24 text-center px-4 overflow-hidden relative">
-                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-                <div class="max-w-3xl mx-auto relative z-10">
-                    <span class="bg-white/20 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-6 inline-block">Partner with Excellence</span>
-                    <h1 class="text-4xl md:text-6xl font-black text-white mb-6 leading-tight">Elevate Your Real Estate Business</h1>
-                    <p class="text-xl text-white/80 font-medium">Ocean Realtors provides the technology, reach, and trust to scale your agency to new heights.</p>
-                </div>
-            </section>
+        <PageSeoHead title="Business Proposal" description="Partner with Ocean Realtors — list inventory and receive qualified property leads across Gurgaon and NCR." path="/proposal" />
 
-            <!-- Proposal Details -->
-            <section class="py-24">
-                <div class="container max-w-5xl mx-auto px-4">
-                    <div class="grid md:grid-cols-2 gap-16 items-center">
-                        <div class="space-y-8">
-                            <h2 class="text-3xl font-black text-gray-900">Why Partner with Ocean?</h2>
-                            <p class="text-gray-500 leading-relaxed font-medium">We aren't just a listing portal; we are a growth engine for developers and agencies. Our platform handles the complexity of lead qualification, media optimization, and search visibility so you can focus on closing deals.</p>
-                            
-                            <div class="space-y-6">
-                                <div v-for="s in steps" :key="s.title" class="flex items-start space-x-4">
-                                    <div class="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
-                                        <svg class="h-5 w-5 text-primary" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-gray-900">{{ s.title }}</h4>
-                                        <p class="text-sm text-gray-400">{{ s.desc }}</p>
-                                    </div>
+        <StaticPageHero
+            badge="Partnerships"
+            title="Partner with Ocean Realtors"
+            subtitle="Developers, builders, and agencies — list inventory on our platform and grow with verified leads across NCR."
+        />
+
+        <section class="section-y-sm bg-white">
+            <div class="container max-w-5xl mx-auto px-4">
+                <div class="grid md:grid-cols-2 gap-12 items-start">
+                    <div>
+                        <h2 class="text-2xl font-bold text-navy mb-4">Why list with us?</h2>
+                        <p class="text-text-secondary text-sm leading-relaxed mb-8">
+                            Ocean Realtors is built for the NCR market — fast search, mobile-friendly listings, and human agents behind every property. We help you present projects professionally and convert interest into site visits.
+                        </p>
+                        <ul class="space-y-5">
+                            <li v-for="b in benefits" :key="b.title" class="flex gap-4">
+                                <span class="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 font-bold text-sm">✓</span>
+                                <div>
+                                    <h3 class="font-bold text-navy text-sm">{{ b.title }}</h3>
+                                    <p class="text-xs text-text-secondary mt-1">{{ b.desc }}</p>
                                 </div>
-                            </div>
-                        </div>
+                            </li>
+                        </ul>
+                    </div>
 
-                        <div class="bg-navy rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl rounded-full -mr-16 -mt-16"></div>
-                            <h3 class="text-2xl font-black mb-6">Request a Proposal</h3>
-                            <form class="space-y-4">
-                                <div><input type="text" placeholder="Full Name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary" /></div>
-                                <div><input type="email" placeholder="Business Email" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary" /></div>
-                                <div><input type="text" placeholder="Company Name" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:ring-primary focus:border-primary" /></div>
-                                <div><textarea placeholder="Tell us about your inventory..." class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm h-32 focus:ring-primary focus:border-primary"></textarea></div>
-                                <button class="w-full bg-primary hover:bg-primary-hover text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-primary/20">Submit Request</button>
-                            </form>
-                        </div>
+                    <div class="bg-navy rounded-2xl p-8 text-white shadow-xl">
+                        <h3 class="text-xl font-bold mb-2">Request a proposal</h3>
+                        <p class="text-white/60 text-sm mb-6">Share your details and our team will call you within one business day.</p>
+                        <form class="space-y-4" @submit.prevent>
+                            <input type="text" placeholder="Your name" class="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:ring-primary focus:border-primary" />
+                            <input type="tel" placeholder="Mobile number" class="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:ring-primary focus:border-primary" />
+                            <input type="email" placeholder="Business email" class="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:ring-primary focus:border-primary" />
+                            <input type="text" placeholder="Company / project name" class="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:ring-primary focus:border-primary" />
+                            <textarea placeholder="Tell us about your inventory..." rows="4" class="w-full rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm placeholder:text-white/40 focus:ring-primary focus:border-primary" />
+                            <Link
+                                :href="`/contact`"
+                                class="block w-full text-center bg-primary hover:bg-primary-hover text-white py-3.5 rounded-xl font-bold text-sm transition-colors"
+                            >
+                                Submit via contact page
+                            </Link>
+                        </form>
+                        <p class="mt-4 text-xs text-white/50 text-center">
+                            Or call <a :href="`tel:${siteContact.phoneTel}`" class="text-white font-semibold">{{ siteContact.phoneDisplay }}</a>
+                        </p>
                     </div>
                 </div>
-            </section>
-        </div>
+            </div>
+        </section>
     </AppLayout>
 </template>

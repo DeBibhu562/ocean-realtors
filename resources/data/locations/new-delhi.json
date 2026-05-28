@@ -1,0 +1,21 @@
+{
+  "areas": [
+    "South Delhi",
+    "Central Delhi",
+    "North Delhi",
+    "East Delhi",
+    "West Delhi",
+    "Kalu Sarai",
+    "Hauz Khas",
+    "Saket",
+    "Dwarka",
+    "Connaught Place",
+    "Karol Bagh",
+    "Lajpat Nagar"
+  ],
+  "localities": {
+    "South Delhi": ["Kalu Sarai", "Hauz Khas", "Green Park", "Malviya Nagar"],
+    "Central Delhi": ["Connaught Place", "Karol Bagh", "Paharganj"],
+    "Kalu Sarai": ["Kalu Sarai", "Vijay Mandal Enclave", "Begumpur"]
+  }
+}

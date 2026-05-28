@@ -1,54 +1,76 @@
 <script setup>
 import AppLayout from '@/Components/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import StaticPageHero from '@/Components/StaticPageHero.vue';
+import { Link } from '@inertiajs/vue3';
+import PageSeoHead from '@/Components/PageSeoHead.vue';
+import { siteContact } from '@/config/site';
 
 const jobs = [
-    { title: 'Senior UX Designer', dept: 'Design', type: 'Full-time', loc: 'Remote / Gurgaon' },
-    { title: 'Backend Engineer (Laravel)', dept: 'Engineering', type: 'Full-time', loc: 'Gurgaon' },
-    { title: 'Real Estate Analyst', dept: 'Strategy', type: 'Contract', loc: 'Mumbai' },
+    { title: 'Property Consultant', dept: 'Sales', type: 'Full-time', loc: 'Gurgaon — Sector 14 office' },
+    { title: 'Listing Coordinator', dept: 'Operations', type: 'Full-time', loc: 'Gurgaon' },
+    { title: 'Digital Marketing Executive', dept: 'Marketing', type: 'Full-time', loc: 'Gurgaon / hybrid' },
+    { title: 'Field Associate (Site visits)', dept: 'Operations', type: 'Full-time', loc: 'Gurgaon & NCR' },
+];
+
+const perks = [
+    'Work with a growing NCR real estate brand',
+    'Training on listings, CRM, and customer handling',
+    'Performance incentives on closures',
+    'Supportive team based in Sector 14, Gurgaon',
 ];
 </script>
 
 <template>
     <AppLayout title="Join Our Team">
-        <Head title="Careers" />
-        
-        <div class="bg-white min-h-screen">
-            <!-- Hero -->
-            <section class="bg-navy py-32 text-center px-4">
-                <div class="max-w-3xl mx-auto">
-                    <span class="text-primary font-black text-xs uppercase tracking-widest mb-6 block">We're Hiring</span>
-                    <h1 class="text-4xl md:text-6xl font-black text-white mb-8">Build the Future of <br/>Real Estate with Us</h1>
-                    <p class="text-xl text-white/50 max-w-2xl mx-auto font-medium leading-relaxed">Join a team of visionaries, engineers, and designers working to redefine how the world finds home.</p>
-                </div>
-            </section>
+        <PageSeoHead title="Careers" description="Join Ocean Realtors — property consultant and operations careers in Gurgaon, Sector 14." path="/careers" />
 
-            <!-- Open Positions -->
-            <section class="py-24 bg-gray-50">
-                <div class="container max-w-4xl mx-auto px-4">
-                    <h2 class="text-3xl font-black text-gray-900 mb-12 text-center">Open Positions</h2>
-                    
-                    <div class="space-y-4">
-                        <div v-for="j in jobs" :key="j.title" class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 hover:border-primary transition-colors group">
-                            <div>
-                                <h3 class="text-xl font-bold text-gray-900 mb-1">{{ j.title }}</h3>
-                                <div class="flex items-center space-x-3 text-xs font-bold text-gray-400 uppercase tracking-tight">
-                                    <span>{{ j.dept }}</span>
-                                    <span>•</span>
-                                    <span>{{ j.type }}</span>
-                                    <span>•</span>
-                                    <span>{{ j.loc }}</span>
-                                </div>
-                            </div>
-                            <button class="w-full md:w-auto bg-primary text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">Apply Now</button>
+        <StaticPageHero
+            badge="We're hiring"
+            title="Join our team"
+            subtitle="Build your career in real estate with Ocean Realtors — sales, operations, and marketing roles in Gurgaon."
+        />
+
+        <section class="section-y-sm bg-white">
+            <div class="container max-w-4xl mx-auto px-4">
+                <h2 class="text-xl font-bold text-navy text-center mb-8">Why work with us?</h2>
+                <ul class="grid sm:grid-cols-2 gap-3 mb-14">
+                    <li v-for="p in perks" :key="p" class="flex items-start gap-2 text-sm text-text-secondary">
+                        <span class="text-primary font-bold">✓</span> {{ p }}
+                    </li>
+                </ul>
+
+                <h2 class="text-xl font-bold text-navy mb-6">Open positions</h2>
+                <div class="space-y-4">
+                    <div
+                        v-for="j in jobs"
+                        :key="j.title"
+                        class="bg-surface-gray/80 p-5 rounded-xl border border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-primary/30 transition-colors"
+                    >
+                        <div>
+                            <h3 class="font-bold text-navy">{{ j.title }}</h3>
+                            <p class="text-xs text-text-muted mt-1 uppercase tracking-wide font-semibold">
+                                {{ j.dept }} · {{ j.type }} · {{ j.loc }}
+                            </p>
                         </div>
-                    </div>
-
-                    <div class="mt-20 text-center">
-                        <p class="text-gray-500 font-medium">Don't see a role that fits? Send us your CV at <br/> <a href="mailto:careers@oceanrealtors.com" class="text-primary font-black hover:underline mt-2 inline-block">careers@oceanrealtors.com</a></p>
+                        <a
+                            :href="`mailto:${siteContact.careersEmail}?subject=${encodeURIComponent('Application: ' + j.title)}`"
+                            class="shrink-0 inline-flex justify-center px-6 py-2.5 rounded-xl bg-primary text-white text-xs font-bold uppercase tracking-wide hover:bg-primary-hover transition-colors"
+                        >
+                            Apply now
+                        </a>
                     </div>
                 </div>
-            </section>
-        </div>
+
+                <p class="text-center mt-12 text-sm text-text-secondary">
+                    Send your CV to
+                    <a :href="`mailto:${siteContact.careersEmail}`" class="text-primary font-bold hover:underline">{{ siteContact.careersEmail }}</a>
+                    or WhatsApp
+                    <a :href="`https://wa.me/${siteContact.whatsapp}`" target="_blank" rel="noopener" class="text-primary font-bold hover:underline">{{ siteContact.phoneDisplay }}</a>
+                </p>
+                <p class="text-center mt-4">
+                    <Link href="/contact" class="text-sm text-primary font-semibold hover:underline">Visit our office →</Link>
+                </p>
+            </div>
+        </section>
     </AppLayout>
 </template>

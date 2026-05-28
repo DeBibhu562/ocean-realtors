@@ -39,6 +39,9 @@ class HandleInertiaRequests extends Middleware
                 ...(new Ziggy)->toArray(),
                 'location' => $request->url(),
             ],
+            'googleMaps' => [
+                'apiKey' => config('services.google_maps.api_key'),
+            ],
         ];
     }
 }

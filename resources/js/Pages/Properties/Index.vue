@@ -1,21 +1,30 @@
 <script setup>
 import { ref } from 'vue';
 import AppLayout from '@/Components/AppLayout.vue';
+import PageSeoHead from '@/Components/PageSeoHead.vue';
 import FilterSidebar from '@/Components/Filters/FilterSidebar.vue';
 import ListingToolbar from '@/Components/Listing/ListingToolbar.vue';
 import PropertyGrid from '@/Components/Listing/PropertyGrid.vue';
 import NewsletterSection from '@/Components/Home/NewsletterSection.vue';
 import { usePropertyFilters } from '@/Composables/usePropertyFilters';
 
-const { 
-    filters, 
-    results, 
-    total, 
+defineProps({
+    initialListings: { type: Array, default: () => [] },
+    initialTotal: { type: Number, default: 0 },
+    initialPage: { type: Number, default: 1 },
+    initialLastPage: { type: Number, default: 1 },
+    initialHasMore: { type: Boolean, default: false },
+});
+
+const {
+    filters,
+    results,
+    total,
     isLoading,
     error,
-    clearFilters, 
-    activeFilterCount, 
-    loadMore, 
+    clearFilters,
+    activeFilterCount,
+    loadMore,
     hasMore,
     runSearch,
 } = usePropertyFilters({ autoFetch: true });
@@ -25,13 +34,15 @@ const isMobileFiltersOpen = ref(false);
 </script>
 
 <template>
-    <AppLayout 
-        title="Search Properties" 
-        useSecondaryNavbar 
-    >
+    <AppLayout title="Search Properties" use-secondary-navbar>
+        <PageSeoHead
+            title="Search Properties"
+            description="Browse verified apartments, villas, and commercial properties for rent and sale across Gurgaon, Delhi, and NCR."
+            path="/properties"
+        />
         <div class="bg-surface min-h-screen">
-            <div class="container max-w-6xl mx-auto px-4 py-8">
-                <div class="flex flex-col lg:flex-row gap-8">
+            <div class="container-page max-w-6xl py-4 pb-28 md:py-8 md:pb-8">
+                <div class="flex flex-col lg:flex-row stack-gap">
                     <!-- Desktop Sidebar -->
                     <aside class="hidden lg:block w-64 shrink-0">
                         <div class="sticky top-20 h-[calc(100vh-100px)] overflow-y-auto pr-2">

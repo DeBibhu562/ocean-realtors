@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import SiteLogo from '@/Components/SiteLogo.vue';
 </script>
 
 <template>
@@ -10,9 +10,7 @@ import { Link } from '@inertiajs/vue3';
                 <div class="col-lg-4 col-md-6">
                     <div class="fs-about">
                         <div class="fs-logo">
-                            <Link href="/">
-                                <img src="/img/f-logo.png" alt="">
-                            </Link>
+                            <SiteLogo size="lg" theme="dark" />
                         </div>
                         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
                             labore et dolore magna aliqua ut aliquip ex ea</p>

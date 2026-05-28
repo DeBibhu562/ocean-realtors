@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import SiteLogo from '@/Components/SiteLogo.vue';
 </script>
 
 <template>
@@ -11,15 +11,8 @@ import { Link } from '@inertiajs/vue3';
         <div class="container mx-auto px-6 relative z-10">
             <div class="max-w-md mx-auto">
                 <!-- Logo -->
-                <div class="text-center mb-10">
-                    <Link href="/" class="inline-flex items-center space-x-2 group">
-                        <div class="w-14 h-14 bg-accent rounded-2xl flex items-center justify-center transition-transform duration-300 group-hover:rotate-12 shadow-lg shadow-accent/20">
-                            <span class="text-white font-extrabold text-3xl">O</span>
-                        </div>
-                        <span class="text-3xl font-black tracking-tighter uppercase italic text-white">
-                            Ocean<span class="text-accent">Realtors</span>
-                        </span>
-                    </Link>
+                <div class="text-center mb-10 flex justify-center">
+                    <SiteLogo size="xl" theme="dark" />
                 </div>
 
                 <!-- Form Card -->

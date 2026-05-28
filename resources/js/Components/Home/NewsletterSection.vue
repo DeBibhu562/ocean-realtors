@@ -30,9 +30,9 @@ const handleSubscribe = async () => {
 </script>
 
 <template>
-    <section class="bg-primary-light py-10 border-t border-border">
-        <div class="container max-w-6xl mx-auto px-4">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+    <section class="bg-primary-light py-6 md:py-10 border-t border-border">
+        <div class="container-page max-w-6xl">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                 <div class="text-center md:text-left">
                     <h2 class="text-lg font-semibold text-text-primary">
                         Get new listings in your inbox

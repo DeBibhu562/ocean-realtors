@@ -7,8 +7,11 @@
         "dev": "vite"
     },
     "dependencies": {
+        "@googlemaps/js-api-loader": "^2.0.2",
+        "@vueup/vue-quill": "^1.2.0",
         "axios": "^1.7.0",
-        "leaflet": "^1.9.4"
+        "leaflet": "^1.9.4",
+        "quill": "^2.0.3"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",

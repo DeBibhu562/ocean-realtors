@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Agent;
 use App\Models\User;
 use App\Models\Property;
 use Illuminate\Database\Seeder;
@@ -11,6 +12,10 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(AgentSeeder::class);
+        $defaultAgentId = Agent::where('slug', 'ocean-realtors-team')->value('id')
+            ?? Agent::active()->value('id');
+
         // 1. Create Admin
         $admin = User::updateOrCreate(
             ['email' => 'admin@ocean.com'],
@@ -66,6 +71,7 @@ class DatabaseSeeder extends Seeder
                 'is_featured' => true,
                 'highlights' => ['Gated Community', 'Power Backup', '24*7 Security', 'Natural Light'],
                 'user_id' => $admin->id,
+                'agent_id' => $defaultAgentId,
             ]
         );
 
@@ -102,12 +108,16 @@ class DatabaseSeeder extends Seeder
                 'servant_room' => true,
                 'is_featured' => true,
                 'highlights' => ['Pool Facing', 'Gymnasium', 'Club House', 'Smart Home'],
-                'user_id' => $testUser->id,
+                'user_id' => $admin->id,
+                'agent_id' => $defaultAgentId,
             ]
         );
 
         $this->call([
             PropertySeeder::class,
+            ReviewSeeder::class,
+            BlogWriterSeeder::class,
+            BlogPostSeeder::class,
         ]);
     }
 }

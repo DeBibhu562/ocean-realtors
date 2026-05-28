@@ -162,8 +162,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section ref="root" class="rounded-2xl border border-primary/10 bg-white p-4 shadow-premium sm:p-6" aria-label="Location map">
-        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <section ref="root" class="rounded-2xl border border-primary/10 bg-white p-4 shadow-premium sm:p-5" aria-label="Location map">
+        <div class="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
             <h2 class="text-lg font-bold text-primary">Location & nearby</h2>
             <div class="flex flex-wrap gap-2">
                 <button
@@ -180,11 +180,11 @@ onBeforeUnmount(() => {
         </div>
         <div
             v-show="!visible"
-            class="flex h-[400px] items-center justify-center rounded-xl bg-surface-gray text-sm text-primary/40"
+            class="flex h-[280px] items-center justify-center rounded-xl bg-surface-gray text-sm text-primary/40 md:h-[360px]"
         >
             Map loads as you scroll…
         </div>
-        <div v-show="visible" ref="mapEl" class="z-0 h-[400px] w-full overflow-hidden rounded-xl border border-primary/10" />
+        <div v-show="visible" ref="mapEl" class="z-0 h-[280px] w-full overflow-hidden rounded-xl border border-primary/10 md:h-[360px]" />
         <p class="mt-2 text-xs text-primary/40">
             Nearby markers are illustrative. Connect Google Places for live POI data.
         </p>

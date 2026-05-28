@@ -6,11 +6,18 @@ import DropdownLink from '@/Components/DropdownLink.vue';
 
 const page = usePage();
 const isSidebarOpen = ref(true);
+const isAdmin = page.props.auth?.user?.is_admin === true;
 
 const navLinks = [
     { name: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', href: route('dashboard'), active: route().current('dashboard') },
     { name: 'My Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', href: route('profile.edit'), active: route().current('profile.edit') },
     { name: 'Leads', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z', href: route('leads.index'), active: route().current('leads.index') },
+    ...(isAdmin ? [
+        { name: 'Agents', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M9 20H4v-2a3 3 0 015.356-1.857M9 20h6M12 12a4 4 0 100-8 4 4 0 000 8z', href: route('admin.agents.index'), active: route().current('admin.agents.*') },
+        { name: 'Reviews', icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.98 10.1c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', href: route('admin.reviews.index'), active: route().current('admin.reviews.*') },
+        { name: 'Blog', icon: 'M12 6.253v13m0-13C10.832 5.483 9.246 5 7.5 5 5.754 5 4.168 5.483 3 6.253v13C4.168 18.483 5.754 18 7.5 18c1.746 0 3.332.483 4.5 1.253m0-13C13.168 5.483 14.754 5 16.5 5c1.746 0 3.332.483 4.5 1.253v13C19.832 18.483 18.246 18 16.5 18c-1.746 0-3.332.483-4.5 1.253', href: route('admin.blog.index'), active: route().current('admin.blog.*') },
+        { name: 'Blog Writers', icon: 'M11 5h2m-1-1v2m-7 3h14M5 9l1 10h12l1-10M9 13v3m6-3v3', href: route('admin.blog-writers.index'), active: route().current('admin.blog-writers.*') },
+    ] : []),
     { name: 'Settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z', href: route('settings.index'), active: route().current('settings.index') },
 ];
 </script>

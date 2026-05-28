@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Modal from '@/Components/Modal.vue';
@@ -10,8 +10,25 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
-    properties: Array,
+    properties: {
+        type: [Array, Object],
+        default: () => [],
+    },
     watermark: String,
+    propertyStats: {
+        type: Object,
+        default: () => ({ total: 0, active: 0, featured: 0 }),
+    },
+    pendingReviewsCount: {
+        type: Number,
+        default: 0,
+    },
+});
+
+const properties = computed(() => {
+    if (Array.isArray(props.properties)) return props.properties;
+    if (Array.isArray(props.properties?.data)) return props.properties.data;
+    return [];
 });
 
 const activeTab = ref('properties');
@@ -150,7 +167,7 @@ const toggleHighlight = (item) => {
                     { label: 'Total Properties', value: properties.length, icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'text-primary bg-primary/10' },
                     { label: 'Active Listings', value: properties.filter(p => p.status === 'For Sale' || p.status === 'For Rent').length, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-green-600 bg-green-50' },
                     { label: 'Featured', value: properties.filter(p => p.is_featured).length, icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', color: 'text-amber-500 bg-amber-50' },
-                    { label: 'Pending Reviews', value: 0, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-blue-500 bg-blue-50' }
+                    { label: 'Pending Reviews', value: pendingReviewsCount, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-blue-500 bg-blue-50' }
                 ]" :key="stat.label" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div :class="stat.color" class="w-12 h-12 rounded-xl flex items-center justify-center">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="stat.icon" /></svg>

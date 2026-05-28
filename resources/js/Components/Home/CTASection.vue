@@ -13,8 +13,8 @@ const ctas = [
 </script>
 
 <template>
-    <section class="py-12 bg-gray-100">
-        <div class="container max-w-6xl mx-auto px-4 flex justify-center">
+    <section class="section-y-sm bg-gray-100">
+        <div class="container-page max-w-6xl flex justify-center">
             <div 
                 v-for="cta in ctas" 
                 :key="cta.title"

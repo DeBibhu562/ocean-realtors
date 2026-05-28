@@ -1,34 +1,47 @@
 <script setup>
 import AppLayout from '@/Components/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import StaticPageHero from '@/Components/StaticPageHero.vue';
+import { Link } from '@inertiajs/vue3';
+import PageSeoHead from '@/Components/PageSeoHead.vue';
+import { siteContact } from '@/config/site';
 
 const terms = [
-    { title: 'User Accounts', content: 'You must be at least 18 years old to use this platform. You are responsible for maintaining the confidentiality of your account credentials.' },
-    { title: 'Property Listings', content: 'Ocean Realtors does not guarantee the accuracy of every listing, though we verify most. Users are advised to perform their own due diligence.' },
-    { title: 'Platform Usage', content: 'Any unauthorized scraping, data mining, or malicious activity on this platform will result in an immediate permanent ban and potential legal action.' },
+    { title: 'Acceptance of terms', content: 'By accessing oceanrealtors.co.in or using our services, you agree to these Terms & Conditions. If you do not agree, please do not use the platform.' },
+    { title: 'Platform role', content: 'Ocean Realtors is a property listing and lead platform. We facilitate connections between property owners, seekers, and our registered agents. We are not a party to lease or sale agreements unless explicitly stated in writing.' },
+    { title: 'Listing accuracy', content: 'We strive to keep listings accurate but do not guarantee that every detail (price, availability, size, amenities) is error-free. Users should verify information during site visits and through official documents.' },
+    { title: 'User conduct', content: 'You may not misuse the site, scrape data without permission, post false listings, harass agents, or attempt to disrupt our systems. Violations may result in account suspension and legal action.' },
+    { title: 'Fees & brokerage', content: 'Brokerage, deposits, and fees are as agreed between you and the agent or owner. Ocean Realtors\' website does not itself charge visitors for browsing listings unless stated for a specific paid service.' },
+    { title: 'Limitation of liability', content: 'To the fullest extent permitted by law, Ocean Realtors is not liable for indirect damages arising from use of the platform, property disputes, or actions of third-party agents or owners.' },
+    { title: 'Governing law', content: 'These terms are governed by the laws of India. Courts at Gurgaon, Haryana shall have jurisdiction for disputes, subject to applicable consumer protection rules.' },
 ];
 </script>
 
 <template>
     <AppLayout title="Terms & Conditions">
-        <Head title="Terms & Conditions" />
-        
-        <div class="bg-gray-50 min-h-screen py-24">
-            <div class="container max-w-3xl mx-auto px-4 bg-white p-12 rounded-3xl shadow-xl border border-gray-100">
-                <h1 class="text-4xl font-black text-gray-900 mb-4">Terms & Conditions</h1>
-                <p class="text-gray-400 text-sm mb-12">Agreement effective as of May 15, 2026</p>
+        <PageSeoHead title="Terms & Conditions" description="Terms and conditions for using the Ocean Realtors website and property services." path="/terms" />
 
-                <div class="space-y-12">
-                    <section v-for="t in terms" :key="t.title">
-                        <h2 class="text-xl font-bold text-gray-900 mb-4">{{ t.title }}</h2>
-                        <p class="text-gray-600 leading-relaxed text-sm">{{ t.content }}</p>
-                    </section>
+        <StaticPageHero
+            badge="Legal"
+            title="Terms & Conditions"
+            subtitle="Please read these terms carefully before using Ocean Realtors website and services."
+        />
 
-                    <div class="pt-12 border-t border-gray-100">
-                        <p class="text-gray-400 text-xs leading-relaxed italic">By using Ocean Realtors, you agree to abide by these terms in full. If you do not agree with any part of these terms, please discontinue use of the platform immediately.</p>
+        <section class="section-y-sm bg-surface-gray">
+            <div class="container max-w-3xl mx-auto px-4">
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 md:p-10">
+                    <p class="text-xs text-text-muted mb-10">Effective: May 2026</p>
+                    <div class="space-y-10">
+                        <section v-for="t in terms" :key="t.title">
+                            <h2 class="text-lg font-bold text-navy mb-3">{{ t.title }}</h2>
+                            <p class="text-sm text-text-secondary leading-relaxed">{{ t.content }}</p>
+                        </section>
+                        <p class="text-xs text-text-muted pt-6 border-t border-gray-100">
+                            Questions? <Link href="/contact" class="text-primary font-semibold hover:underline">Contact us</Link>
+                            or call <a :href="`tel:${siteContact.phoneTel}`" class="text-primary font-semibold">{{ siteContact.phoneDisplay }}</a>.
+                        </p>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </AppLayout>
 </template>

@@ -1,0 +1,21 @@
+/** Shown when /api/locations/cities fails or returns empty (matches resources/data/locations/cities.json). */
+export const FALLBACK_CITIES = [
+    'Gurgaon',
+    'New Delhi',
+    'Noida',
+    'Greater Noida',
+    'Faridabad',
+    'Ghaziabad',
+    'Sohna',
+    'Manesar',
+    'Dwarka',
+    'Chandigarh',
+    'Mumbai',
+    'Bengaluru',
+    'Pune',
+    'Hyderabad',
+    'Chennai',
+    'Kolkata',
+    'Jaipur',
+    'Lucknow',
+].map((name) => ({ name, count: 0 }));

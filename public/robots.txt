@@ -3,5 +3,14 @@ Allow: /
 Disallow: /dashboard
 Disallow: /profile
 Disallow: /api
+Disallow: /admin
+Disallow: /leads
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /confirm-password
 
-Sitemap: https://ocean-realtors.com/sitemap.xml
+Sitemap: https://oceanrealtors.co.in/sitemap.xml

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'google_maps' => [
+        'api_key' => env('GOOGLE_MAPS_API_KEY'),
+        'geocode_cache_days' => (int) env('GOOGLE_GEOCODE_CACHE_DAYS', 30),
+    ],
+
 ];

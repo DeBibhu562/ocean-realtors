@@ -1,0 +1,16 @@
+{
+  "areas": [
+    "Sector 62",
+    "Sector 76",
+    "Sector 150",
+    "Noida Expressway",
+    "Greater Noida West",
+    "Greater Noida",
+    "Uttam Nagar"
+  ],
+  "localities": {
+    "Sector 62": ["Sector 62", "Sector 63"],
+    "Sector 76": ["Sector 76", "Sector 77"],
+    "Noida Expressway": ["Sector 128", "Sector 137"]
+  }
+}

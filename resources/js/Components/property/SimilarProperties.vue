@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { Link } from '@inertiajs/vue3';
-import PropertyCard from '@/Components/PropertyCard.vue';
+import SimilarPropertyCard from '@/Components/property/SimilarPropertyCard.vue';
 
 const props = defineProps({
     propertyId: { type: Number, required: true },
@@ -29,37 +29,43 @@ onMounted(async () => {
 </script>
 
 <template>
-    <section class="rounded-2xl border border-primary/10 bg-white p-6 shadow-premium sm:p-8" aria-label="Similar properties">
-        <div class="mb-4 flex items-center justify-between gap-4">
-            <h2 class="text-lg font-bold text-primary">Similar properties</h2>
+    <section
+        class="rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-5"
+        aria-label="Similar properties"
+    >
+        <div class="mb-3 flex items-center justify-between gap-3">
+            <h2 class="text-base font-bold text-navy sm:text-lg">Similar properties</h2>
             <Link
-                :href="`/property?city=${encodeURIComponent(city)}`"
-                class="shrink-0 text-sm font-bold text-accent hover:underline"
+                v-if="city"
+                :href="route('properties.index', { city })"
+                class="shrink-0 text-xs font-semibold text-primary hover:underline sm:text-sm"
             >
-                View all similar
+                View all
             </Link>
         </div>
 
-        <p v-if="loading" class="text-sm text-primary/50">Loading…</p>
+        <p v-if="loading" class="text-sm text-gray-400">Loading…</p>
         <p v-else-if="error" class="text-sm text-red-600">{{ error }}</p>
-        <p v-else-if="!items.length" class="text-sm text-primary/50">No similar listings right now.</p>
+        <p v-else-if="!items.length" class="text-sm text-gray-400">No similar listings right now.</p>
 
         <template v-else>
             <!-- Mobile: horizontal scroll -->
-            <div class="-mx-2 flex gap-4 overflow-x-auto px-2 pb-2 snap-x snap-mandatory md:hidden">
-                <div v-for="p in items" :key="p.id" class="w-[min(85vw,320px)] shrink-0 snap-center">
-                    <Link :href="`/property/${p.id}`" class="block h-full">
-                        <PropertyCard :property="p" />
-                    </Link>
-                </div>
-            </div>
+            <ul class="-mx-1 flex list-none gap-3 overflow-x-auto px-1 pb-1 snap-x snap-mandatory md:hidden">
+                <li
+                    v-for="p in items"
+                    :key="p.id"
+                    class="w-[min(88vw,22rem)] shrink-0 snap-start"
+                >
+                    <SimilarPropertyCard :property="p" />
+                </li>
+            </ul>
 
-            <!-- Desktop: 3 columns -->
-            <div class="hidden gap-6 md:grid md:grid-cols-3">
-                <Link v-for="p in items" :key="p.id" :href="`/property/${p.id}`" class="block">
-                    <PropertyCard :property="p" />
-                </Link>
-            </div>
+            <!-- Desktop: compact stacked list -->
+            <ul class="hidden list-none space-y-2.5 md:block">
+                <li v-for="p in items" :key="p.id">
+                    <SimilarPropertyCard :property="p" />
+                </li>
+            </ul>
         </template>
     </section>
 </template>

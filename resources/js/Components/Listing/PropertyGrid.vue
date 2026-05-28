@@ -33,8 +33,8 @@ onMounted(() => {
             class="transition-all duration-300"
             :class="[
                 view === 'grid' 
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' 
-                    : 'flex flex-col space-y-4'
+                    ? 'grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5' 
+                    : 'flex flex-col gap-4'
             ]"
         >
             <template v-for="property in properties" :key="property.id">
@@ -55,8 +55,8 @@ onMounted(() => {
             class="mt-4"
             :class="[
                 view === 'grid' 
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' 
-                    : 'flex flex-col space-y-4'
+                    ? 'grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-5' 
+                    : 'flex flex-col gap-4'
             ]"
         >
             <div v-for="i in 6" :key="i" class="bg-white rounded-xl border border-border overflow-hidden animate-pulse">

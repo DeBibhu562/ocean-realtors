@@ -1,0 +1,27 @@
+{
+  "areas": [
+    "DLF Phase 1",
+    "DLF Phase 2",
+    "DLF Phase 3",
+    "DLF Phase 4",
+    "DLF Phase 5",
+    "Golf Course Road",
+    "Sohna Road",
+    "MG Road",
+    "Sector 14",
+    "Sector 15",
+    "Sector 56",
+    "Cyber City",
+    "South City",
+    "Palam Vihar"
+  ],
+  "localities": {
+    "DLF Phase 2": ["Sector 25", "Sector 26", "DLF City Phase 2"],
+    "DLF Phase 1": ["Sector 26", "Sector 27"],
+    "DLF Phase 3": ["Sector 24", "Sector 25"],
+    "Golf Course Road": ["Sector 42", "Sector 43", "Sector 54"],
+    "Sohna Road": ["Sector 47", "Sector 48", "Sector 49"],
+    "MG Road": ["Sector 14", "Sector 17", "Sector 28"],
+    "Cyber City": ["Udyog Vihar", "DLF Cyber City"]
+  }
+}

@@ -8,18 +8,34 @@
 
         <title inertia>{{ config('app.name', 'Ocean Realtors') }}</title>
 
-        <!-- Preconnect to external domains -->
+        @if (request()->is('/'))
+            <title>Real Estate in Gurgaon | Rent Property in Gurgaon| OceanRealtors.co.in</title>
+            <meta name="description" content="Real Estate Gurgaon - Browse best properties for rent in Gurgaon - View ✓Top Localities. ✓Bachelor Friendly Properties. ✓Owners Listings. Visit Now!">
+            <link rel="preload" as="image" href="{{ asset('images/hero/hero-mobile.webp') }}" type="image/webp" media="(max-width: 768px)" fetchpriority="high">
+            <link rel="preload" as="image" href="{{ asset('images/hero/hero-desktop.webp') }}" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
+        @endif
+
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="preconnect" href="https://images.unsplash.com">
 
-        <!-- Google Fonts -->
-        <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+            media="print"
+            onload="this.media='all'"
+        >
+        <noscript>
+            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+        </noscript>
 
-        <!-- Scripts -->
+        <style>
+            body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+        </style>
+
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
+        @stack('head')
     </head>
     <body class="font-sans antialiased text-primary selection:bg-accent selection:text-white overflow-x-hidden">
         @inertia

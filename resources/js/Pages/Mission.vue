@@ -1,69 +1,67 @@
 <script setup>
 import AppLayout from '@/Components/AppLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import StaticPageHero from '@/Components/StaticPageHero.vue';
+import { Link } from '@inertiajs/vue3';
+import PageSeoHead from '@/Components/PageSeoHead.vue';
+import { siteContact } from '@/config/site';
 
 const values = [
-    { title: 'Integrity', desc: 'We operate with absolute transparency and honesty in every transaction.' },
-    { title: 'Innovation', desc: 'Leveraging cutting-edge technology to simplify the property search journey.' },
-    { title: 'Excellence', desc: 'Committed to delivering world-class service to buyers, sellers, and agents.' },
+    { title: 'Transparency', desc: 'Clear pricing, verified listings, and honest advice at every step of your property journey.' },
+    { title: 'Local expertise', desc: 'Deep knowledge of Gurgaon, Delhi NCR, and surrounding markets — sectors, societies, and fair valuations.' },
+    { title: 'Client-first service', desc: 'Dedicated agents who respond quickly on call, WhatsApp, and email until you find the right home or tenant.' },
+    { title: 'Technology', desc: 'Smart search, rich photos, and instant enquiries so you spend less time searching and more time deciding.' },
 ];
 </script>
 
 <template>
     <AppLayout title="Mission & Vision">
-        <Head title="Mission & Vision" />
-        
-        <div class="bg-white min-h-screen">
-            <!-- Hero Section -->
-            <section class="relative bg-navy py-24 overflow-hidden">
-                <div class="absolute inset-0 opacity-10">
-                    <div class="absolute top-0 right-0 w-1/2 h-full bg-no-repeat bg-contain bg-right-bottom" style="background-image: url('https://housing.com/assets/cityscape-light.5f1f91b7.svg')"></div>
-                </div>
-                <div class="container max-w-4xl mx-auto px-4 relative z-10 text-center">
-                    <h1 class="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">Our Mission & Vision</h1>
-                    <p class="text-xl text-white/70 max-w-2xl mx-auto font-medium">Redefining the future of real estate through trust, technology, and transparency.</p>
-                </div>
-            </section>
+        <PageSeoHead title="Mission & Vision" description="Ocean Realtors mission and vision — transparent, client-first real estate services across Gurgaon and Delhi NCR." path="/mission" />
 
-            <!-- Mission & Vision Cards -->
-            <section class="py-20 -mt-16 relative z-20">
-                <div class="container max-w-5xl mx-auto px-4">
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 group hover:border-primary transition-all duration-500">
-                            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                                <svg class="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            </div>
-                            <h2 class="text-3xl font-black text-gray-900 mb-4">Our Mission</h2>
-                            <p class="text-gray-600 leading-relaxed text-lg font-medium italic">
-                                "To empower every individual with the data and tools they need to find their perfect home with absolute confidence and ease."
-                            </p>
-                        </div>
+        <StaticPageHero
+            badge="Who we are"
+            title="Mission & Vision"
+            subtitle="Ocean Realtors exists to make renting and buying property in Gurgaon and NCR simple, transparent, and stress-free."
+        />
 
-                        <div class="bg-white p-10 rounded-3xl shadow-xl border border-gray-100 group hover:border-primary transition-all duration-500">
-                            <div class="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform">
-                                <svg class="h-8 w-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                            </div>
-                            <h2 class="text-3xl font-black text-gray-900 mb-4">Our Vision</h2>
-                            <p class="text-gray-600 leading-relaxed text-lg font-medium italic">
-                                "To become the world's most trusted real estate ecosystem, connecting dreams with reality through seamless human-centric innovation."
-                            </p>
+        <section class="section-y-sm -mt-8 relative z-10">
+            <div class="container max-w-5xl mx-auto px-4">
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
+                            <svg class="h-6 w-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         </div>
+                        <h2 class="text-2xl font-bold text-navy mb-3">Our mission</h2>
+                        <p class="text-text-secondary leading-relaxed text-sm">
+                            To connect buyers, tenants, and owners through verified listings and expert consultants — so every family and business finds the right space with confidence, without hidden costs or misleading information.
+                        </p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-5">
+                            <svg class="h-6 w-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-navy mb-3">Our vision</h2>
+                        <p class="text-text-secondary leading-relaxed text-sm">
+                            To be the most trusted name in NCR real estate — known for integrity, responsive service, and a platform where every listing and every agent represents the Ocean Realtors standard of quality.
+                        </p>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Core Values -->
-            <section class="py-20 bg-gray-50">
-                <div class="container max-w-5xl mx-auto px-4 text-center">
-                    <h2 class="text-3xl font-black text-gray-900 mb-12">Core Values</h2>
-                    <div class="grid md:grid-cols-3 gap-8">
-                        <div v-for="v in values" :key="v.title" class="p-8 bg-white rounded-2xl shadow-sm border border-gray-100">
-                            <h3 class="text-xl font-bold text-gray-900 mb-3">{{ v.title }}</h3>
-                            <p class="text-gray-500 text-sm leading-relaxed">{{ v.desc }}</p>
-                        </div>
+        <section class="section-y-sm bg-surface-gray">
+            <div class="container max-w-5xl mx-auto px-4">
+                <h2 class="text-2xl font-bold text-navy text-center mb-10">Core values</h2>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div v-for="v in values" :key="v.title" class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+                        <h3 class="font-bold text-navy mb-2">{{ v.title }}</h3>
+                        <p class="text-sm text-text-secondary leading-relaxed">{{ v.desc }}</p>
                     </div>
                 </div>
-            </section>
-        </div>
+                <p class="text-center mt-10 text-sm text-text-secondary">
+                    Visit us at {{ siteContact.address.full }} or call
+                    <a :href="`tel:${siteContact.phoneTel}`" class="text-primary font-semibold hover:underline">{{ siteContact.phoneDisplay }}</a>
+                </p>
+            </div>
+        </section>
     </AppLayout>
 </template>
