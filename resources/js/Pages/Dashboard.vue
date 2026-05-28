@@ -541,7 +541,7 @@ const goPrevStep = () => {
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><InputLabel value="Category*" /><select v-model="form.category" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Residential</option><option>Commercial</option></select></div>
                             <div><InputLabel value="Looking to*" /><select v-model="form.listing_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Rent</option><option>Sell</option><option>PG</option></select></div>
-                            <div><InputLabel value="Property Type*" /><select v-model="form.type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Apartment</option><option>Villa</option><option>Studio</option><option>Floor</option><option>Builder Floor</option><option>Plot</option></select></div>
+                            <div><InputLabel value="Property Type*" /><select v-model="form.type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Apartment/ Flat</option><option>Villa</option><option>Studio</option><option>Builder Floor</option><option>Plot</option></select></div>
                         </div>
                         <div><InputLabel value="Society / Project Name" /><TextInput v-model="form.society_name" class="w-full" placeholder="DLF Camellias / M3M Golf Estate" /></div>
                     </div>

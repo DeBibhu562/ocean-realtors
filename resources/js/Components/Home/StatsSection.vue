@@ -38,24 +38,19 @@ const formatNumber = (num) => new Intl.NumberFormat().format(num);
 </script>
 
 <template>
-    <section ref="statsSection" class="bg-white border-b border-border py-10">
+    <section ref="statsSection" class="relative border-b border-indigo-100/60 bg-gradient-to-b from-indigo-50/70 via-white to-white py-12">
         <div class="container max-w-6xl mx-auto px-4">
-            <div class="grid grid-cols-2 md:grid-cols-4">
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
                 <div 
                     v-for="(stat, i) in stats" 
                     :key="stat.label"
-                    class="text-center relative py-4"
+                    class="group relative rounded-2xl border border-indigo-100/70 bg-white/95 px-3 py-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 >
-                    <!-- Vertical Separator -->
-                    <div 
-                        v-if="i !== 0" 
-                        class="hidden md:block absolute left-0 top-1/2 -translate-y-1/2 w-px h-10 bg-border"
-                    ></div>
-                    
-                    <div class="text-2xl font-bold text-text-primary leading-none">
+                    <div class="mx-auto mb-2 h-1.5 w-10 rounded-full bg-primary/20 transition-all group-hover:w-14 group-hover:bg-primary/35"></div>
+                    <div class="text-2xl font-black text-navy leading-none md:text-[2rem]">
                         {{ formatNumber(counts[i]) }}{{ stat.suffix }}
                     </div>
-                    <div class="text-xs text-text-secondary font-semibold uppercase tracking-wider mt-1.5">
+                    <div class="mt-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 md:text-xs">
                         {{ stat.label }}
                     </div>
                 </div>

@@ -196,3 +196,10 @@ Stack trace:
 #2 /home/oceanrealtorsco/ocean-realtors/artisan(10): require('/home/oceanreal...')
 #3 {main}
   thrown in /home/oceanrealtorsco/ocean-realtors/vendor/composer/platform_check.php on line 22
+[28-May-2026 06:29:19 America/New_York] PHP Fatal error:  Uncaught RuntimeException: Composer detected issues in your platform: Your Composer dependencies require a PHP version ">= 8.4.0". You are running 8.2.31. in /home/oceanrealtorsco/ocean-realtors/vendor/composer/platform_check.php:22
+Stack trace:
+#0 /home/oceanrealtorsco/ocean-realtors/vendor/composer/autoload_real.php(25): require()
+#1 /home/oceanrealtorsco/ocean-realtors/vendor/autoload.php(22): ComposerAutoloaderInitf665756415fb3abc93b3ccdb48a5f73d::getLoader()
+#2 /home/oceanrealtorsco/ocean-realtors/artisan(10): require('/home/oceanreal...')
+#3 {main}
+  thrown in /home/oceanrealtorsco/ocean-realtors/vendor/composer/platform_check.php on line 22

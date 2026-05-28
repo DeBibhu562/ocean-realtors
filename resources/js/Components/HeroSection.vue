@@ -76,7 +76,7 @@ const selectCity = (city) => {
 
 <template>
     <section
-        class="hero-section relative z-20 flex min-h-[520px] flex-col justify-start sm:min-h-[560px] sm:justify-center lg:min-h-[620px]"
+        class="hero-section relative z-20 flex min-h-[430px] flex-col justify-start sm:min-h-[540px] sm:justify-center lg:min-h-[620px]"
         aria-label="Property search"
     >
         <div class="absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -104,7 +104,7 @@ const selectCity = (city) => {
         />
         <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" aria-hidden="true" />
 
-        <div class="container relative z-10 mx-auto max-w-6xl px-3 pb-5 pt-4 sm:px-4 sm:pb-10 sm:pt-12 lg:pb-12 lg:pt-16">
+        <div class="container relative z-10 mx-auto max-w-6xl px-3 pb-2 pt-4 sm:px-4 sm:pb-8 sm:pt-12 lg:pb-12 lg:pt-16">
             <div class="mx-auto mb-3 max-w-3xl text-center sm:mb-6">
                 <h1 class="text-xl font-bold leading-tight tracking-tight text-white drop-shadow-md sm:text-4xl md:text-5xl lg:text-[3.25rem]">
                     {{ headline }}

@@ -11,12 +11,12 @@ const props = defineProps({
 });
 
 const sizeClass = computed(() => {
-    if (props.compact) return 'text-lg md:text-xl';
+    if (props.compact) return 'h-7 md:h-8';
     const map = {
-        sm: 'text-lg',
-        md: 'text-xl',
-        lg: 'text-2xl',
-        xl: 'text-3xl',
+        sm: 'h-7',
+        md: 'h-8',
+        lg: 'h-10',
+        xl: 'h-12',
     };
     return map[props.size] || map.md;
 });
@@ -29,9 +29,12 @@ const sizeClass = computed(() => {
         class="inline-flex shrink-0 items-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         :aria-label="showLink ? 'Ocean Realtors — Home' : undefined"
     >
-        <span :class="[sizeClass, 'inline-flex items-center leading-none font-bold tracking-tight']">
-            <span :class="theme === 'dark' ? 'text-white' : 'text-text-primary'">Ocean</span>
-            <span class="text-primary">Realtors</span>
-        </span>
+        <img
+            src="/img/logo_oceanrealtors.png"
+            alt="Ocean Realtors"
+            :class="[sizeClass, 'w-auto object-contain']"
+            loading="eager"
+            decoding="async"
+        />
     </component>
 </template>
