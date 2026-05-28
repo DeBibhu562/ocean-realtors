@@ -105,6 +105,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::patch('/blog/{blog}/toggle', [AdminBlogPostController::class, 'togglePublish'])->name('blog.toggle');
 
     Route::get('/blog-writers', [AdminBlogWriterController::class, 'index'])->name('blog-writers.index');
+    Route::get('/blog-writers/create', [AdminBlogWriterController::class, 'create'])->name('blog-writers.create');
+    Route::post('/blog-writers', [AdminBlogWriterController::class, 'store'])->name('blog-writers.store');
     Route::get('/blog-writers/{blogWriter}/edit', [AdminBlogWriterController::class, 'edit'])->name('blog-writers.edit');
     Route::put('/blog-writers/{blogWriter}', [AdminBlogWriterController::class, 'update'])->name('blog-writers.update');
 

@@ -47,6 +47,17 @@ const formatDate = (iso) => {
         </template>
 
         <div class="space-y-6">
+            <div class="flex items-center justify-end gap-3">
+                <Link
+                    :href="route('admin.blog-writers.index')"
+                    class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                    Manage Writers
+                </Link>
+                <Link :href="route('admin.blog.create')">
+                    <PrimaryButton>Add New Blog</PrimaryButton>
+                </Link>
+            </div>
             <form @submit.prevent="applySearch" class="flex gap-2 max-w-md">
                 <input
                     v-model="search"

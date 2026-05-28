@@ -229,6 +229,11 @@ class PropertyRepository
         $area = $property->built_up_area ?? $property->size ?? 0;
         $statusSlug = $this->statusSlug($property);
         $images = ListingImage::forCard($property->image);
+        $photos = is_array($property->photos) ? $property->photos : [];
+        $gallery = array_values(array_unique(array_filter(array_merge(
+            $images['image'] ? [$images['image']] : [],
+            $photos
+        ))));
         $agent = AgentPresenter::forProperty($property->agent);
 
         return [
@@ -248,6 +253,7 @@ class PropertyRepository
             'bhk' => $property->bhk,
             'image' => $images['image'],
             'image_srcset' => $images['image_srcset'],
+            'photos' => $gallery,
             'isFeatured' => (bool) $property->is_featured,
             'description_preview' => $property->description
                 ? \Illuminate\Support\Str::limit(strip_tags((string) $property->description), 120)

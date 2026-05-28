@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import PropertyCardBrandBar from '@/Components/PropertyCardBrandBar.vue';
 import PropertyListingSpecs from '@/Components/PropertyListingSpecs.vue';
@@ -15,6 +15,13 @@ const props = defineProps({
 });
 
 const showPhone = ref(false);
+const currentImageIndex = ref(0);
+const isDragging = ref(false);
+const dragStartX = ref(0);
+const dragDeltaX = ref(0);
+const suppressNextClick = ref(false);
+const mobileAutoSlideEnabled = ref(false);
+let autoSlideTimer = null;
 
 const isRental = computed(
     () => props.property.status === 'rent' || props.property.is_rental === true,
@@ -35,6 +42,101 @@ const propertyRef = computed(() => props.property);
 const { phoneDisplay, hasContact } = usePropertyContact(agentRef, propertyRef);
 
 const cardSizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px';
+const galleryImages = computed(() => {
+    const photos = Array.isArray(props.property?.photos) ? props.property.photos : [];
+    const merged = [props.property?.image, ...photos]
+        .filter((img) => typeof img === 'string' && img.trim() !== '')
+        .map((img) => img.trim());
+
+    const unique = [...new Set(merged)];
+
+    return unique.length > 0 ? unique : ['/images/property-placeholder.svg'];
+});
+const activeImage = computed(() =>
+    galleryImages.value[currentImageIndex.value] || galleryImages.value[0],
+);
+
+const goPrevImage = () => {
+    if (galleryImages.value.length <= 1) return;
+    currentImageIndex.value = (currentImageIndex.value - 1 + galleryImages.value.length) % galleryImages.value.length;
+};
+
+const goNextImage = () => {
+    if (galleryImages.value.length <= 1) return;
+    currentImageIndex.value = (currentImageIndex.value + 1) % galleryImages.value.length;
+};
+
+const startAutoSlide = () => {
+    stopAutoSlide();
+    if (!mobileAutoSlideEnabled.value || galleryImages.value.length <= 1) return;
+
+    autoSlideTimer = window.setInterval(() => {
+        goNextImage();
+    }, 3500);
+};
+
+const stopAutoSlide = () => {
+    if (autoSlideTimer) {
+        window.clearInterval(autoSlideTimer);
+        autoSlideTimer = null;
+    }
+};
+
+const onPointerDown = (event) => {
+    if (galleryImages.value.length <= 1) return;
+    isDragging.value = true;
+    dragStartX.value = event.clientX;
+    dragDeltaX.value = 0;
+    stopAutoSlide();
+};
+
+const onPointerMove = (event) => {
+    if (!isDragging.value) return;
+    dragDeltaX.value = event.clientX - dragStartX.value;
+};
+
+const finishDrag = () => {
+    if (!isDragging.value) return;
+
+    const threshold = 45;
+    if (dragDeltaX.value > threshold) {
+        goPrevImage();
+        suppressNextClick.value = true;
+    } else if (dragDeltaX.value < -threshold) {
+        goNextImage();
+        suppressNextClick.value = true;
+    }
+
+    isDragging.value = false;
+    dragStartX.value = 0;
+    dragDeltaX.value = 0;
+    startAutoSlide();
+};
+
+const onImageClick = (event) => {
+    if (suppressNextClick.value) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressNextClick.value = false;
+    }
+};
+
+watch(
+    () => galleryImages.value.length,
+    () => {
+        currentImageIndex.value = 0;
+        startAutoSlide();
+    },
+);
+
+onMounted(() => {
+    mobileAutoSlideEnabled.value = window.matchMedia('(pointer: coarse)').matches;
+    startAutoSlide();
+});
+
+onUnmounted(() => {
+    stopAutoSlide();
+});
 </script>
 
 <template>
@@ -47,9 +149,18 @@ const cardSizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px';
             :agent-avatar="property.agent?.avatar"
         />
 
-        <Link :href="detailHref" class="relative block aspect-[4/3] overflow-hidden bg-slate-100">
+        <Link
+            :href="detailHref"
+            class="relative block aspect-[4/3] touch-pan-y overflow-hidden bg-slate-100"
+            @click="onImageClick"
+            @pointerdown="onPointerDown"
+            @pointermove="onPointerMove"
+            @pointerup="finishDrag"
+            @pointercancel="finishDrag"
+            @pointerleave="finishDrag"
+        >
             <img
-                :src="property.image || '/images/property-placeholder.svg'"
+                :src="activeImage"
                 :srcset="property.image_srcset || undefined"
                 :sizes="property.image_srcset ? cardSizes : undefined"
                 :alt="property.title"
@@ -59,6 +170,45 @@ const cardSizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px';
                 :loading="lazyImage ? 'lazy' : 'eager'"
                 decoding="async"
             />
+
+            <template v-if="galleryImages.length > 1">
+                <button
+                    type="button"
+                    class="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white transition hover:bg-black/55"
+                    aria-label="Previous image"
+                    @click.prevent.stop="goPrevImage"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <button
+                    type="button"
+                    class="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white transition hover:bg-black/55"
+                    aria-label="Next image"
+                    @click.prevent.stop="goNextImage"
+                >
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <div class="absolute bottom-3 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
+                    <span
+                        v-for="(img, idx) in galleryImages.slice(0, 5)"
+                        :key="`${property.id}-dot-${idx}`"
+                        class="h-1.5 w-1.5 rounded-full"
+                        :class="idx === currentImageIndex ? 'bg-white' : 'bg-white/60'"
+                        aria-hidden="true"
+                    />
+                    <span
+                        v-if="galleryImages.length > 5"
+                        class="rounded-full bg-black/35 px-1.5 py-0.5 text-[9px] font-semibold text-white"
+                    >
+                        +{{ galleryImages.length - 5 }}
+                    </span>
+                </div>
+            </template>
 
             <div class="absolute left-3 top-3 flex flex-col gap-1.5">
                 <span

@@ -41,6 +41,25 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## Property Watermark Backfill
+
+Property uploads are processed through `ImageService` and watermarked at the image center.  
+To backfill older local images that were not normalized, use:
+
+```bash
+# Dry-run (safe default, no file or DB updates)
+/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks
+
+# Commit mode (writes processed images + updates DB paths)
+/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks --commit
+```
+
+Optional:
+
+```bash
+/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks --chunk=200
+```
+
 ## Contributing
 
 Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).

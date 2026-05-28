@@ -42,6 +42,11 @@ const deleteAgent = (agent) => {
         </template>
 
         <div class="space-y-6">
+            <div class="flex items-center justify-end">
+                <Link :href="route('admin.agents.create')">
+                    <PrimaryButton>Add New Agent</PrimaryButton>
+                </Link>
+            </div>
             <form @submit.prevent="applySearch" class="flex gap-2 max-w-md">
                 <input
                     v-model="search"

@@ -168,6 +168,7 @@ class PropertyController extends Controller
         if (! is_array($photos)) {
             $photos = [];
         }
+        $photos = $this->normalizeSubmittedPhotoPaths($photos);
 
         $allFiles = $request->allFiles();
         $files = isset($allFiles['new_photos'])
@@ -192,6 +193,46 @@ class PropertyController extends Controller
         $validated['image'] = $photos[0] ?? null;
 
         return $validated;
+    }
+
+    /**
+     * Ensure user-submitted local images pass through the centralized processing pipeline.
+     *
+     * @param  array<int, mixed>  $photos
+     * @return array<int, string>
+     */
+    protected function normalizeSubmittedPhotoPaths(array $photos): array
+    {
+        $normalized = [];
+
+        foreach ($photos as $photoPath) {
+            if (! is_string($photoPath) || trim($photoPath) === '') {
+                continue;
+            }
+
+            $path = trim($photoPath);
+            $processedPath = $path;
+
+            $isHttp = str_starts_with($path, 'http://') || str_starts_with($path, 'https://');
+            $alreadyNormalized = (bool) preg_match('/^(?:\/storage\/)?properties\/.+\.webp$/i', $path);
+            if (! $isHttp && ! $alreadyNormalized) {
+                try {
+                    $reprocessed = $this->imageService->processPropertyImageFromPublicPath($path);
+                    if ($reprocessed) {
+                        $processedPath = $reprocessed;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Existing photo path could not be reprocessed.', [
+                        'path' => $path,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
+
+            $normalized[] = $processedPath;
+        }
+
+        return array_values(array_unique($normalized));
     }
 
     /**

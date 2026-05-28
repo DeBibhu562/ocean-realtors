@@ -19,13 +19,37 @@ defineProps({
                         Display-only author profiles shown on blog cards and articles.
                     </p>
                 </div>
-                <Link :href="route('admin.blog.index')" class="text-sm font-semibold text-primary hover:underline">
-                    ← Back to blog
-                </Link>
+                <div class="flex items-center gap-3">
+                    <Link
+                        :href="route('admin.blog-writers.create')"
+                        class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
+                    >
+                        + New writer
+                    </Link>
+                    <Link :href="route('admin.blog.index')" class="text-sm font-semibold text-primary hover:underline">
+                        ← Back to blog
+                    </Link>
+                </div>
             </div>
         </template>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="space-y-6">
+            <div class="flex items-center justify-end gap-3">
+                <Link
+                    :href="route('admin.blog.index')"
+                    class="rounded-xl border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                >
+                    Back to Blog
+                </Link>
+                <Link
+                    :href="route('admin.blog-writers.create')"
+                    class="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90"
+                >
+                    Add New Writer
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div
                 v-for="writer in writers"
                 :key="writer.id"
@@ -51,6 +75,7 @@ defineProps({
                 >
                     Edit profile
                 </Link>
+            </div>
             </div>
         </div>
     </AuthenticatedLayout>

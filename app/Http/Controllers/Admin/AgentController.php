@@ -9,6 +9,9 @@ use App\Models\Agent;
 use App\Models\Property;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -58,8 +61,11 @@ class AgentController extends Controller
 
     public function store(StoreAgentRequest $request): RedirectResponse
     {
-        $data = $this->prepareData($request->validated(), $request);
-        Agent::create($data);
+        $data = $request->validated();
+        DB::transaction(function () use ($request, &$data) {
+            $data = $this->prepareData($data, $request);
+            Agent::create($data);
+        });
 
         return redirect()->route('admin.agents.index')->with('message', 'Agent created successfully.');
     }
@@ -75,7 +81,11 @@ class AgentController extends Controller
 
     public function update(UpdateAgentRequest $request, Agent $agent): RedirectResponse
     {
-        $agent->update($this->prepareData($request->validated(), $request, $agent));
+        $data = $request->validated();
+        DB::transaction(function () use ($request, $agent, &$data) {
+            $data = $this->prepareData($data, $request, $agent);
+            $agent->update($data);
+        });
 
         return redirect()->route('admin.agents.index')->with('message', 'Agent updated successfully.');
     }
@@ -118,7 +128,14 @@ class AgentController extends Controller
         unset($validated['avatar']);
 
         if ($request->hasFile('avatar')) {
-            $validated['avatar'] = $request->file('avatar')->store('agents', 'public');
+            try {
+                $validated['avatar'] = $request->file('avatar')->store('agents', 'public');
+            } catch (\Throwable $e) {
+                Log::warning('Agent avatar upload failed.', ['error' => $e->getMessage()]);
+                throw ValidationException::withMessages([
+                    'avatar' => 'Avatar upload failed. Please try a different image.',
+                ]);
+            }
         }
 
         return $validated;

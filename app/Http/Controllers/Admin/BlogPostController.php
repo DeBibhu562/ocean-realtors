@@ -12,6 +12,9 @@ use App\Support\BlogContentSanitizer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -49,11 +52,13 @@ class BlogPostController extends Controller
 
     public function store(StoreBlogPostRequest $request): RedirectResponse
     {
-        $data = $this->prepareData($request->validated(), $request);
-
-        BlogPost::create(array_merge($data, [
-            'user_id' => $request->user()->id,
-        ]));
+        $data = $request->validated();
+        DB::transaction(function () use ($request, &$data) {
+            $data = $this->prepareData($data, $request);
+            BlogPost::create(array_merge($data, [
+                'user_id' => $request->user()->id,
+            ]));
+        });
         Cache::forget('sitemap.xml');
 
         return redirect()->route('admin.blog.index')->with('message', 'Blog post created successfully.');
@@ -69,8 +74,11 @@ class BlogPostController extends Controller
 
     public function update(UpdateBlogPostRequest $request, BlogPost $blog): RedirectResponse
     {
-        $data = $this->prepareData($request->validated(), $request, $blog);
-        $blog->update($data);
+        $data = $request->validated();
+        DB::transaction(function () use ($request, $blog, &$data) {
+            $data = $this->prepareData($data, $request, $blog);
+            $blog->update($data);
+        });
         Cache::forget('sitemap.xml');
 
         return redirect()->route('admin.blog.index')->with('message', 'Blog post updated successfully.');
@@ -123,11 +131,25 @@ class BlogPostController extends Controller
         }
 
         if ($request->hasFile('featured_image')) {
-            $validated['featured_image'] = $this->imageService->processBlogFeaturedImage($request->file('featured_image'));
+            try {
+                $validated['featured_image'] = $this->imageService->processBlogFeaturedImage($request->file('featured_image'));
+            } catch (\Throwable $e) {
+                Log::warning('Blog featured image processing failed.', ['error' => $e->getMessage()]);
+                throw ValidationException::withMessages([
+                    'featured_image' => 'Featured image processing failed. Please upload a different image.',
+                ]);
+            }
         }
 
         if ($request->hasFile('og_image')) {
-            $validated['og_image'] = $this->imageService->processBlogOgImage($request->file('og_image'));
+            try {
+                $validated['og_image'] = $this->imageService->processBlogOgImage($request->file('og_image'));
+            } catch (\Throwable $e) {
+                Log::warning('Blog OG image processing failed.', ['error' => $e->getMessage()]);
+                throw ValidationException::withMessages([
+                    'og_image' => 'OG image processing failed. Please upload a different image.',
+                ]);
+            }
         }
 
         return $validated;
