@@ -18,6 +18,7 @@ class Property extends Model
         'age_of_property', 'balconies', 'furnish_type', 'amenities', 'covered_parking',
         'open_parking', 'tenant_type', 'bachelor_preference', 'pet_friendly', 'available_from',
         'maintenance_charges', 'maintenance_type', 'security_deposit', 'lock_in_period',
+        'booking_amount', 'price_negotiable', 'food_charges', 'pg_food_included',
         'brokerage_charge', 'brokerage_negotiable', 'parking_charges_type', 'painting_charges',
         'floor_no', 'total_floors', 'facing', 'servant_room', 'rera_id', 'highlights', 'photos',
         'latitude', 'longitude', 'virtual_tour_url', 'floor_plan_image', 'views_count',
@@ -31,6 +32,8 @@ class Property extends Model
         'available_from' => 'date',
         'is_featured' => 'boolean',
         'pet_friendly' => 'boolean',
+        'price_negotiable' => 'boolean',
+        'pg_food_included' => 'boolean',
         'brokerage_negotiable' => 'boolean',
         'servant_room' => 'boolean',
     ];

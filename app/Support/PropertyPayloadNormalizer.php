@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Str;
+
 /**
  * Normalizes validated listing payloads before Eloquent save.
  * Empty strings on nullable numeric columns cause MySQL 1366 errors.
@@ -42,6 +44,7 @@ final class PropertyPayloadNormalizer
         'maintenance_charges',
         'latitude',
         'longitude',
+        'booking_amount',
     ];
 
     /**
@@ -67,6 +70,98 @@ final class PropertyPayloadNormalizer
         }
 
         return $validated;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    public static function applyComputedTitleAndSeo(array $payload, ?int $propertyId = null): array
+    {
+        $title = self::buildCanonicalTitle($payload, $propertyId);
+        $payload['title'] = $title;
+
+        if (! array_key_exists('meta_title', $payload) || self::isBlank($payload['meta_title'])) {
+            $payload['meta_title'] = self::buildMetaTitle($title, $payload);
+        }
+
+        if (! array_key_exists('meta_description', $payload) || self::isBlank($payload['meta_description'])) {
+            $payload['meta_description'] = self::buildMetaDescription($payload);
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private static function buildCanonicalTitle(array $payload, ?int $propertyId = null): string
+    {
+        $segments = array_values(array_filter([
+            self::normalizedToken((string) ($payload['bhk'] ?? '')),
+            self::normalizedToken((string) ($payload['type'] ?? '')),
+            self::normalizedToken((string) ($payload['locality'] ?? $payload['area'] ?? $payload['society_name'] ?? '')),
+            self::normalizedToken((string) ($payload['city'] ?? '')),
+        ]));
+
+        $base = implode('+', $segments);
+        if ($base === '') {
+            $base = 'property+listing';
+        }
+
+        if ($propertyId !== null) {
+            return Str::limit($base, 220, '').'-('.$propertyId.')';
+        }
+
+        return Str::limit($base, 245, '');
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private static function buildMetaTitle(string $title, array $payload): string
+    {
+        $humanTitle = trim((string) str_replace(['+', '-'], [' ', ' '], $title));
+        $listingType = trim((string) ($payload['listing_type'] ?? ''));
+
+        $meta = $humanTitle;
+        if ($listingType !== '') {
+            $meta .= ' | For '.$listingType;
+        }
+        $meta .= ' | Ocean Realtors';
+
+        return Str::limit($meta, 70, '');
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private static function buildMetaDescription(array $payload): string
+    {
+        $parts = array_values(array_filter([
+            (string) ($payload['bhk'] ?? ''),
+            (string) ($payload['type'] ?? ''),
+            (string) ($payload['listing_type'] ?? ''),
+            (string) ($payload['locality'] ?? $payload['area'] ?? ''),
+            (string) ($payload['city'] ?? ''),
+        ]));
+
+        $summary = trim(implode(' ', $parts));
+        $price = $payload['price'] ?? null;
+        $priceText = is_numeric($price) ? ' at Rs '.number_format((float) $price) : '';
+
+        return Str::limit(
+            ($summary !== '' ? $summary : 'Property listing').' with verified details'.$priceText.'. Contact Ocean Realtors for visit and deal support.',
+            160,
+            ''
+        );
+    }
+
+    private static function normalizedToken(string $value): string
+    {
+        $token = Str::slug($value, '-');
+
+        return trim((string) preg_replace('/-+/', '-', $token), '-');
     }
 
     private static function isBlank(mixed $value): bool

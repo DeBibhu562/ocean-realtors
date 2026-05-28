@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
@@ -8,6 +8,8 @@ import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
+import ListingLocationMap from '@/Components/Listing/ListingLocationMap.vue';
+import { useListingLocationOptions } from '@/Composables/useListingLocationOptions';
 
 const props = defineProps({
     properties: {
@@ -30,38 +32,79 @@ const properties = computed(() => {
     if (Array.isArray(props.properties?.data)) return props.properties.data;
     return [];
 });
+const propertyPagination = computed(() => {
+    if (!props.properties || Array.isArray(props.properties)) {
+        return { links: [], from: null, to: null, total: properties.value.length };
+    }
+
+    return {
+        links: Array.isArray(props.properties.links) ? props.properties.links : [],
+        from: props.properties.from ?? null,
+        to: props.properties.to ?? null,
+        total: props.properties.total ?? properties.value.length,
+    };
+});
 
 const activeTab = ref('properties');
 const showingPropertyModal = ref(false);
 const editingProperty = ref(null);
 const currentStep = ref(1);
+const totalSteps = 6;
+const stepLabels = [
+    'Basic Information',
+    'Location',
+    'Pricing & Deal Terms',
+    'Property Specifications',
+    'Highlights & Amenities',
+    'Media & Publish',
+];
 
 const form = useForm({
     title: '', description: '', price: '', status: 'For Sale', type: 'Apartment', address: '', city: 'Gurgaon',
     bedrooms: 2, bathrooms: 2, garage: 1, size: 0, is_featured: false,
-    category: 'Residential', listing_type: 'Rent', bhk: '2 BHK', society_name: '',
+    category: 'Residential', listing_type: 'Rent', listing_status: 'Active', bhk: '2 BHK', society_name: '',
     built_up_area: '', carpet_area: '', age_of_property: 0, balconies: 1, furnish_type: 'Unfurnished',
     amenities: [], covered_parking: '1', open_parking: '0', tenant_type: 'Family',
     bachelor_preference: 'Open for both', pet_friendly: false, available_from: '',
+    price_negotiable: false, pg_food_included: false,
+    booking_amount: '', food_charges: '',
     maintenance_charges: '', maintenance_type: 'Separate', security_deposit: '1 month',
     lock_in_period: 'None', brokerage_charge: 'None', brokerage_negotiable: false,
     parking_charges_type: 'Separate', painting_charges: 'None',
     floor_no: '', total_floors: '', facing: 'North', servant_room: false, rera_id: '',
     highlights: [], existing_photos: [], new_photos: [],
+    area: '', locality: '', latitude: '', longitude: '',
     _method: null
 });
 
 const photoPreviews = ref([]);
+const {
+    cityOptions,
+    areaOptions,
+    localityOptions,
+    loadingAreas,
+    loadingLocalities,
+    citySelect,
+    areaSelect,
+    localitySelect,
+    LOCATION_OTHER,
+    initLocationStep,
+    applyGeocodeResult,
+} = useListingLocationOptions(form);
 
-const openCreateModal = () => {
+const openCreateModal = async () => {
     editingProperty.value = null;
     currentStep.value = 1;
     photoPreviews.value = [];
     form.reset();
+    form.city = 'Gurgaon';
+    setBuiltUpFromSqFt('');
+    setCarpetFromSqFt('');
+    await initLocationStep();
     showingPropertyModal.value = true;
 };
 
-const openEditModal = (property) => {
+const openEditModal = async (property) => {
     editingProperty.value = property;
     currentStep.value = 1;
     photoPreviews.value = [];
@@ -71,9 +114,16 @@ const openEditModal = (property) => {
         highlights: property.highlights || [],
         existing_photos: property.photos || [],
         new_photos: [],
-        available_from: property.available_from ? new Date(property.available_from).toISOString().split('T')[0] : ''
+        available_from: property.available_from ? new Date(property.available_from).toISOString().split('T')[0] : '',
+        area: property.area || '',
+        locality: property.locality || '',
+        latitude: property.latitude ? String(property.latitude) : '',
+        longitude: property.longitude ? String(property.longitude) : '',
     });
     form.reset();
+    setBuiltUpFromSqFt(property.built_up_area || '');
+    setCarpetFromSqFt(property.carpet_area || '');
+    await initLocationStep();
     showingPropertyModal.value = true;
 };
 
@@ -96,11 +146,101 @@ const removeExistingPhoto = (index) => {
     form.existing_photos.splice(index, 1);
 };
 
+const isSell = computed(() => form.listing_type === 'Sell');
+const isRent = computed(() => form.listing_type === 'Rent');
+const isPg = computed(() => form.listing_type === 'PG');
+const showPgFields = computed(() => isPg.value || isRent.value);
+const cityOptionName = (city) => (typeof city === 'string' ? city : city?.name ?? '');
+
+const toSqM = (sqFt) => sqFt / 10.7639;
+const toSqYd = (sqFt) => sqFt / 9;
+const toSqFtFromSqM = (sqM) => sqM * 10.7639;
+const toSqFtFromSqYd = (sqYd) => sqYd * 9;
+const roundArea = (value) => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return '';
+    return (Math.round(n * 100) / 100).toString();
+};
+
+const builtUpSqFt = ref('');
+const builtUpSqM = ref('');
+const builtUpSqYd = ref('');
+const carpetSqFt = ref('');
+const carpetSqM = ref('');
+const carpetSqYd = ref('');
+let syncingAreaUnits = false;
+
+const setBuiltUpFromSqFt = (sqFt) => {
+    syncingAreaUnits = true;
+    const ft = Number(sqFt);
+    if (!Number.isFinite(ft) || ft <= 0) {
+        builtUpSqFt.value = '';
+        builtUpSqM.value = '';
+        builtUpSqYd.value = '';
+        form.built_up_area = '';
+    } else {
+        builtUpSqFt.value = roundArea(ft);
+        builtUpSqM.value = roundArea(toSqM(ft));
+        builtUpSqYd.value = roundArea(toSqYd(ft));
+        form.built_up_area = roundArea(ft);
+    }
+    syncingAreaUnits = false;
+};
+
+const setCarpetFromSqFt = (sqFt) => {
+    syncingAreaUnits = true;
+    const ft = Number(sqFt);
+    if (!Number.isFinite(ft) || ft <= 0) {
+        carpetSqFt.value = '';
+        carpetSqM.value = '';
+        carpetSqYd.value = '';
+        form.carpet_area = '';
+    } else {
+        carpetSqFt.value = roundArea(ft);
+        carpetSqM.value = roundArea(toSqM(ft));
+        carpetSqYd.value = roundArea(toSqYd(ft));
+        form.carpet_area = roundArea(ft);
+    }
+    syncingAreaUnits = false;
+};
+
+watch(builtUpSqFt, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(val); });
+watch(builtUpSqM, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(toSqFtFromSqM(Number(val))); });
+watch(builtUpSqYd, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(toSqFtFromSqYd(Number(val))); });
+watch(carpetSqFt, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(val); });
+watch(carpetSqM, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(toSqFtFromSqM(Number(val))); });
+watch(carpetSqYd, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(toSqFtFromSqYd(Number(val))); });
+watch(
+    () => form.listing_type,
+    (listingType) => {
+        form.status = listingType === 'Sell' ? 'For Sale' : 'For Rent';
+    },
+    { immediate: true }
+);
+
+const normalizePricingByIntent = () => {
+    if (isSell.value) {
+        form.security_deposit = '';
+        form.lock_in_period = '';
+        form.pg_food_included = false;
+        form.food_charges = '';
+        form.maintenance_type = '';
+    } else {
+        form.booking_amount = '';
+    }
+
+    if (!showPgFields.value) {
+        form.pg_food_included = false;
+        form.food_charges = '';
+    }
+};
+
 const submit = () => {
     // Ensure numbers are numbers
     form.bedrooms = parseInt(form.bhk.split(' ')[0]) || 0;
     form.garage = parseInt(form.covered_parking) || 0;
     form.size = parseInt(form.built_up_area) || 0;
+    normalizePricingByIntent();
 
     if (editingProperty.value) {
         form._method = 'PUT';
@@ -121,6 +261,8 @@ const closeModal = () => {
     showingPropertyModal.value = false;
     form.reset();
     photoPreviews.value = [];
+    setBuiltUpFromSqFt('');
+    setCarpetFromSqFt('');
 };
 
 const watermarkForm = useForm({ watermark: null });
@@ -150,6 +292,25 @@ const toggleHighlight = (item) => {
     if (idx > -1) form.highlights.splice(idx, 1);
     else if (form.highlights.length < 4) form.highlights.push(item);
 };
+
+const amenityOptions = [
+    'Lift', 'Power Backup', 'Gym', 'Swimming Pool', 'Club House',
+    'Security', 'Parking', 'Garden', 'Children Play Area', 'Fire Safety',
+];
+
+const toggleAmenity = (item) => {
+    const idx = form.amenities.indexOf(item);
+    if (idx > -1) form.amenities.splice(idx, 1);
+    else form.amenities.push(item);
+};
+
+const goNextStep = () => {
+    if (currentStep.value < totalSteps) currentStep.value += 1;
+};
+
+const goPrevStep = () => {
+    if (currentStep.value > 1) currentStep.value -= 1;
+};
 </script>
 
 <template>
@@ -164,9 +325,9 @@ const toggleHighlight = (item) => {
             <!-- Stats Overview -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div v-for="stat in [
-                    { label: 'Total Properties', value: properties.length, icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'text-primary bg-primary/10' },
-                    { label: 'Active Listings', value: properties.filter(p => p.status === 'For Sale' || p.status === 'For Rent').length, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-green-600 bg-green-50' },
-                    { label: 'Featured', value: properties.filter(p => p.is_featured).length, icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', color: 'text-amber-500 bg-amber-50' },
+                    { label: 'Total Properties', value: propertyStats.total, icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', color: 'text-primary bg-primary/10' },
+                    { label: 'Active Listings', value: propertyStats.active, icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-green-600 bg-green-50' },
+                    { label: 'Featured', value: propertyStats.featured, icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.175 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z', color: 'text-amber-500 bg-amber-50' },
                     { label: 'Pending Reviews', value: pendingReviewsCount, icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', color: 'text-blue-500 bg-blue-50' }
                 ]" :key="stat.label" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center space-x-4">
                     <div :class="stat.color" class="w-12 h-12 rounded-xl flex items-center justify-center">
@@ -272,6 +433,24 @@ const toggleHighlight = (item) => {
                                 </tr>
                             </tbody>
                         </table>
+                        <div
+                            v-if="propertyPagination.links.length > 3"
+                            class="flex items-center justify-between border-t border-gray-100 px-8 py-4"
+                        >
+                            <p class="text-sm text-gray-500">
+                                Showing {{ propertyPagination.from || 0 }}-{{ propertyPagination.to || properties.length }} of {{ propertyPagination.total }}
+                            </p>
+                            <div class="flex flex-wrap items-center gap-1">
+                                <Link
+                                    v-for="link in propertyPagination.links"
+                                    :key="`prop-page-${link.label}`"
+                                    :href="link.url || '#'"
+                                    class="rounded-lg px-3 py-1.5 text-sm"
+                                    :class="link.active ? 'bg-primary text-white' : link.url ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'pointer-events-none text-gray-300'"
+                                    v-html="link.label"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Branding Settings -->
@@ -315,84 +494,229 @@ const toggleHighlight = (item) => {
             </div>
         </div>
 
-        <!-- COMPACT 2-PAGE MODAL -->
+        <!-- ADVANCED 5-STEP LISTING MODAL -->
         <Modal :show="showingPropertyModal" @close="closeModal" max-width="5xl">
-            <div class="p-8 max-h-[90vh] overflow-y-auto">
+            <div class="listing-modal p-8 max-h-[90vh] overflow-y-auto">
                 <div class="flex justify-between items-center mb-8 border-b pb-6">
                     <div>
                         <h2 class="text-2xl font-black text-gray-900 dark:text-white">{{ editingProperty ? 'Update Listing' : 'Create New Listing' }}</h2>
-                        <p class="text-sm text-gray-500">Step {{ currentStep }} of 2: {{ currentStep === 1 ? 'Primary Details & Financials' : 'Amenities & Property Media' }}</p>
+                        <p class="text-sm text-gray-500">Step {{ currentStep }} of {{ totalSteps }}: {{ stepLabels[currentStep - 1] }}</p>
                     </div>
                     <div class="flex gap-2">
-                        <div v-for="s in 2" :key="s" :class="currentStep >= s ? 'bg-blue-600' : 'bg-gray-200'" class="h-1.5 w-12 rounded-full transition-all"></div>
+                        <div v-for="s in totalSteps" :key="s" :class="currentStep >= s ? 'bg-blue-600' : 'bg-gray-200'" class="h-1.5 w-10 rounded-full transition-all"></div>
                     </div>
                 </div>
 
                 <form @submit.prevent="submit" class="space-y-8">
-                    <!-- PAGE 1: PRIMARY & FINANCIALS -->
-                    <div v-if="currentStep === 1" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div class="space-y-6">
-                            <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Basic Information</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><InputLabel value="Category*" /><select v-model="form.category" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Residential</option><option>Commercial</option></select></div>
-                                <div><InputLabel value="Looking to*" /><select v-model="form.listing_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Rent</option><option>Sell</option><option>PG</option></select></div>
+                    <div class="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
+                        <aside class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                            <p class="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">Listing Progress</p>
+                            <div class="space-y-3">
+                                <div
+                                    v-for="(label, idx) in stepLabels"
+                                    :key="`step-rail-${label}`"
+                                    class="flex items-start gap-2"
+                                >
+                                    <div
+                                        class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black"
+                                        :class="currentStep >= idx + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'"
+                                    >
+                                        {{ idx + 1 }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold" :class="currentStep === idx + 1 ? 'text-gray-900' : 'text-gray-500'">
+                                            {{ label }}
+                                        </p>
+                                        <p class="text-[11px] text-gray-400">
+                                            {{ currentStep > idx + 1 ? 'Completed' : currentStep === idx + 1 ? 'In progress' : 'Pending' }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><InputLabel value="Property Type*" /><select v-model="form.type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Apartment</option><option>Villa</option><option>Studio</option><option>Floor</option></select></div>
-                                <div><InputLabel value="Status*" /><select v-model="form.status" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>For Sale</option><option>For Rent</option></select></div>
-                            </div>
-                            <div><InputLabel value="Property Title*" /><TextInput v-model="form.title" class="w-full" placeholder="e.g. Modern 3BHK Apartment in DLF Phase 5" required /></div>
-                            <div><InputLabel value="Full Address*" /><TextInput v-model="form.address" class="w-full" placeholder="Street, Sector, Area..." required /></div>
-                            <div><InputLabel value="City*" /><TextInput v-model="form.city" class="w-full" required /></div>
+                        </aside>
+                        <div class="space-y-8">
+                    <!-- STEP 1 -->
+                    <div v-if="currentStep === 1" class="space-y-6">
+                        <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Basic Information</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><InputLabel value="Category*" /><select v-model="form.category" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Residential</option><option>Commercial</option></select></div>
+                            <div><InputLabel value="Looking to*" /><select v-model="form.listing_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Rent</option><option>Sell</option><option>PG</option></select></div>
+                            <div><InputLabel value="Property Type*" /><select v-model="form.type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Apartment</option><option>Villa</option><option>Studio</option><option>Floor</option><option>Builder Floor</option><option>Plot</option></select></div>
                         </div>
+                        <div><InputLabel value="Society / Project Name" /><TextInput v-model="form.society_name" class="w-full" placeholder="DLF Camellias / M3M Golf Estate" /></div>
+                    </div>
 
-                        <div class="space-y-6">
-                            <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Financial Details</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><InputLabel :value="form.listing_type === 'Rent' ? 'Rent Amount*' : 'Sale Price*'" /><TextInput type="number" v-model="form.price" class="w-full" required /></div>
-                                <div><InputLabel value="Maintenance" /><TextInput type="number" v-model="form.maintenance_charges" class="w-full" /></div>
+                    <!-- STEP 2 -->
+                    <div v-if="currentStep === 2" class="space-y-6">
+                        <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Location</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <InputLabel value="City*" />
+                                <select v-model="citySelect" class="w-full rounded-lg border-gray-300 dark:bg-gray-900">
+                                    <option value="">Select city</option>
+                                    <option v-for="city in cityOptions" :key="cityOptionName(city)" :value="cityOptionName(city)">{{ cityOptionName(city) }}</option>
+                                    <option :value="LOCATION_OTHER">Other</option>
+                                </select>
+                                <TextInput v-if="citySelect === LOCATION_OTHER" v-model="form.city" class="mt-2 w-full" placeholder="Enter city" required />
                             </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div><InputLabel value="Security Deposit" /><TextInput v-model="form.security_deposit" class="w-full" /></div>
-                                <div><InputLabel value="Brokerage" /><select v-model="form.brokerage_charge" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>None</option><option>15 Days</option><option>30 Days</option></select></div>
+                            <div>
+                                <InputLabel value="Area" />
+                                <select v-model="areaSelect" class="w-full rounded-lg border-gray-300 dark:bg-gray-900" :disabled="loadingAreas">
+                                    <option value="">Select area</option>
+                                    <option v-for="area in areaOptions" :key="area.name" :value="area.name">{{ area.name }}</option>
+                                    <option :value="LOCATION_OTHER">Other</option>
+                                </select>
+                                <TextInput v-if="areaSelect === LOCATION_OTHER" v-model="form.area" class="mt-2 w-full" placeholder="Enter area" />
                             </div>
-                            <div><InputLabel value="Availability Date" /><TextInput type="date" v-model="form.available_from" class="w-full" /></div>
-                            <div class="flex items-center gap-4 pt-4">
-                                <label class="flex items-center"><input type="checkbox" v-model="form.is_featured" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Featured Listing</span></label>
-                                <label class="flex items-center"><input type="checkbox" v-model="form.pet_friendly" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Pet Friendly</span></label>
+                            <div>
+                                <InputLabel value="Locality" />
+                                <select v-model="localitySelect" class="w-full rounded-lg border-gray-300 dark:bg-gray-900" :disabled="loadingLocalities">
+                                    <option value="">Select locality</option>
+                                    <option v-for="loc in localityOptions" :key="loc.name" :value="loc.name">{{ loc.name }}</option>
+                                    <option :value="LOCATION_OTHER">Other</option>
+                                </select>
+                                <TextInput v-if="localitySelect === LOCATION_OTHER" v-model="form.locality" class="mt-2 w-full" placeholder="Enter locality" />
+                            </div>
+                        </div>
+                        <div>
+                            <InputLabel value="Full Address*" />
+                            <TextInput v-model="form.address" class="w-full" placeholder="Street, Sector, Area..." required />
+                        </div>
+                        <div class="rounded-2xl border border-gray-200 p-4">
+                            <h4 class="mb-3 text-sm font-black uppercase tracking-wide text-gray-600">Map Locator</h4>
+                            <ListingLocationMap
+                                :latitude="form.latitude"
+                                :longitude="form.longitude"
+                                :city="form.city"
+                                :active="currentStep === 2 && showingPropertyModal"
+                                @geocoded="applyGeocodeResult"
+                            />
+                            <div class="mt-3 grid grid-cols-2 gap-3">
+                                <div><InputLabel value="Latitude" /><TextInput v-model="form.latitude" class="w-full" placeholder="28.4595" /></div>
+                                <div><InputLabel value="Longitude" /><TextInput v-model="form.longitude" class="w-full" placeholder="77.0266" /></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- PAGE 2: FEATURES & MEDIA -->
-                    <div v-if="currentStep === 2" class="space-y-10">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-6">
-                                <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Specifications</h3>
-                                <div class="grid grid-cols-3 gap-4">
-                                    <div><InputLabel value="BHK" /><select v-model="form.bhk" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option v-for="n in ['1 BHK','2 BHK','3 BHK','4 BHK','5+ BHK']" :key="n">{{n}}</option></select></div>
-                                    <div><InputLabel value="Baths" /><TextInput type="number" v-model="form.bathrooms" class="w-full" /></div>
-                                    <div><InputLabel value="Balconies" /><TextInput type="number" v-model="form.balconies" class="w-full" /></div>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div><InputLabel value="Built Up Area" /><TextInput type="number" v-model="form.built_up_area" class="w-full" /></div>
-                                    <div><InputLabel value="Property Age" /><TextInput type="number" v-model="form.age_of_property" class="w-full" /></div>
-                                </div>
-                                <div><InputLabel value="Furnishing" /><select v-model="form.furnish_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Unfurnished</option><option>Semi Furnished</option><option>Fully Furnished</option></select></div>
+                    <!-- STEP 3 -->
+                    <div v-if="currentStep === 3" class="space-y-6">
+                        <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Pricing & Deal Terms</h3>
+                        <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                            <p class="text-xs font-bold uppercase tracking-wider text-gray-500">Pricing profile</p>
+                            <p class="mt-1 text-sm text-gray-600">
+                                {{ isSell ? 'Sell listing: token + brokerage percentage.' : 'Rent/PG listing: rent, deposit, lock-in, and utilities.' }}
+                            </p>
+                        </div>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div class="rounded-xl border border-gray-200 p-4">
+                                <InputLabel :value="isSell ? 'Expected Sale Price*' : 'Monthly Rent*'" />
+                                <TextInput type="number" v-model="form.price" class="mt-1 w-full" required />
                             </div>
-
-                            <div class="space-y-6">
-                                <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Highlights</h3>
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button v-for="o in highlightOptions" :key="o.label" type="button" @click="toggleHighlight(o.label)" :class="form.highlights.includes(o.label) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 dark:bg-gray-900 border-gray-200'" class="text-left px-4 py-3 border rounded-xl text-xs font-bold transition-all shadow-sm">
-                                        {{ o.label }}
-                                    </button>
-                                </div>
-                                <div><InputLabel value="Description" /><textarea v-model="form.description" class="w-full rounded-xl border-gray-300 dark:bg-gray-900" rows="3" placeholder="Describe unique features..."></textarea></div>
+                            <div class="rounded-xl border border-gray-200 p-4">
+                                <InputLabel value="Listing Status" />
+                                <select v-model="form.listing_status" class="mt-1 w-full rounded-lg border-gray-300 dark:bg-gray-900">
+                                    <option>Active</option><option>Draft</option><option>Inactive</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- PHOTO UPLOADER WITH PREVIEW -->
+                        <div v-if="isSell" class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div><InputLabel value="Token / Booking Amount" /><TextInput type="number" v-model="form.booking_amount" class="w-full" placeholder="Booking amount" /></div>
+                            <div><InputLabel value="Brokerage (%)" /><TextInput v-model="form.brokerage_charge" class="w-full" placeholder="e.g. 1.5%" /></div>
+                        </div>
+
+                        <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div><InputLabel value="Security Deposit" /><TextInput v-model="form.security_deposit" class="w-full" /></div>
+                            <div><InputLabel value="Maintenance Charges" /><TextInput type="number" v-model="form.maintenance_charges" class="w-full" /></div>
+                            <div><InputLabel value="Maintenance Type" /><select v-model="form.maintenance_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Included</option><option>Separate</option></select></div>
+                            <div><InputLabel value="Lock-in Period" /><TextInput v-model="form.lock_in_period" class="w-full" placeholder="e.g. 6 months" /></div>
+                            <div><InputLabel value="Brokerage" /><select v-model="form.brokerage_charge" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>None</option><option>Half Month Rent</option><option>One Month Rent</option><option>Custom</option></select></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div><InputLabel value="Tenant Type" /><select v-model="form.tenant_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Family</option><option>Bachelors</option><option>Any</option></select></div>
+                            <div v-if="showPgFields"><InputLabel value="Food Charges" /><TextInput type="number" v-model="form.food_charges" class="w-full" placeholder="Optional monthly food charges" /></div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 md:grid-cols-3">
+                            <label class="flex items-center"><input type="checkbox" v-model="form.is_featured" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Featured</span></label>
+                            <label class="flex items-center"><input type="checkbox" v-model="form.price_negotiable" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Price Negotiable</span></label>
+                            <label class="flex items-center"><input type="checkbox" v-model="form.pet_friendly" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Pet Friendly</span></label>
+                            <label v-if="showPgFields" class="flex items-center"><input type="checkbox" v-model="form.pg_food_included" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">PG Food Included</span></label>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4 -->
+                    <div v-if="currentStep === 4" class="space-y-6">
+                        <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Property Specifications</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><InputLabel value="BHK" /><select v-model="form.bhk" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option v-for="n in ['1 BHK','2 BHK','3 BHK','4 BHK','5+ BHK']" :key="n">{{n}}</option></select></div>
+                            <div><InputLabel value="Bathrooms" /><TextInput type="number" v-model="form.bathrooms" class="w-full" /></div>
+                            <div><InputLabel value="Balconies" /><TextInput type="number" v-model="form.balconies" class="w-full" /></div>
+                            <div><InputLabel value="Age (years)" /><TextInput type="number" v-model="form.age_of_property" class="w-full" /></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="rounded-xl border border-gray-200 p-4">
+                                <InputLabel value="Built Up Area Converter" />
+                                <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="number" v-model="builtUpSqFt" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="number" v-model="builtUpSqM" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="number" v-model="builtUpSqYd" class="w-full" /></div>
+                                </div>
+                            </div>
+                            <div class="rounded-xl border border-gray-200 p-4">
+                                <InputLabel value="Carpet Area Converter" />
+                                <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="number" v-model="carpetSqFt" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="number" v-model="carpetSqM" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="number" v-model="carpetSqYd" class="w-full" /></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><InputLabel value="Floor No" /><TextInput type="number" v-model="form.floor_no" class="w-full" /></div>
+                            <div><InputLabel value="Total Floors" /><TextInput type="number" v-model="form.total_floors" class="w-full" /></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div><InputLabel value="Furnishing" /><select v-model="form.furnish_type" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>Unfurnished</option><option>Semi Furnished</option><option>Fully Furnished</option></select></div>
+                            <div><InputLabel value="Facing" /><select v-model="form.facing" class="w-full rounded-lg border-gray-300 dark:bg-gray-900"><option>North</option><option>South</option><option>East</option><option>West</option></select></div>
+                            <div><InputLabel value="Covered Parking" /><TextInput type="number" v-model="form.covered_parking" class="w-full" /></div>
+                            <div><InputLabel value="Open Parking" /><TextInput type="number" v-model="form.open_parking" class="w-full" /></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <label class="flex items-center"><input type="checkbox" v-model="form.servant_room" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Servant Room</span></label>
+                            <label class="flex items-center"><input type="checkbox" v-model="form.brokerage_negotiable" class="rounded text-blue-600" /><span class="ml-2 text-sm font-bold">Brokerage Negotiable</span></label>
+                        </div>
+                    </div>
+
+                    <!-- STEP 5 -->
+                    <div v-if="currentStep === 5" class="space-y-8">
+                        <div class="space-y-6">
+                            <h3 class="font-bold text-lg border-l-4 border-blue-600 pl-3">Highlights</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                <button v-for="o in highlightOptions" :key="o.label" type="button" @click="toggleHighlight(o.label)" :class="form.highlights.includes(o.label) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 dark:bg-gray-900 border-gray-200'" class="text-left px-4 py-3 border rounded-xl text-xs font-bold transition-all shadow-sm">
+                                    {{ o.label }}
+                                </button>
+                            </div>
+                            <div><InputLabel value="Description" /><textarea v-model="form.description" class="w-full rounded-xl border-gray-300 dark:bg-gray-900" rows="4" placeholder="Describe unique features..."></textarea></div>
+                            <div><InputLabel value="RERA ID" /><TextInput v-model="form.rera_id" class="w-full" placeholder="RERA Registration ID" /></div>
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-2">
+                                <button
+                                    v-for="amenity in amenityOptions"
+                                    :key="amenity"
+                                    type="button"
+                                    class="rounded-xl border px-3 py-2 text-xs font-bold transition-all"
+                                    :class="form.amenities.includes(amenity) ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-50 border-gray-200 text-gray-700'"
+                                    @click="toggleAmenity(amenity)"
+                                >
+                                    {{ amenity }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 6 -->
+                    <div v-if="currentStep === 6" class="space-y-8">
                         <div class="space-y-6 bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-lg">Property Media (Max 20)</h3>
@@ -423,19 +747,25 @@ const toggleHighlight = (item) => {
                             </div>
                             <InputError :message="form.errors.new_photos" />
                         </div>
+
+                        <div class="rounded-xl border border-gray-200 p-4 text-sm text-gray-600">
+                            Review complete listing details and click publish.
+                        </div>
                     </div>
 
                     <!-- ACTIONS -->
                     <div class="flex justify-between items-center border-t pt-8">
-                        <SecondaryButton v-if="currentStep > 1" @click="currentStep--">Previous Step</SecondaryButton>
+                        <SecondaryButton v-if="currentStep > 1" @click="goPrevStep">Previous Step</SecondaryButton>
                         <div v-else></div>
                         
                         <div class="flex gap-4">
                             <button type="button" @click="closeModal" class="text-gray-500 font-bold hover:text-gray-800 transition">Discard</button>
-                            <PrimaryButton v-if="currentStep === 1" type="button" @click="currentStep = 2" class="px-8 py-3">Next: Features & Photos</PrimaryButton>
+                            <PrimaryButton v-if="currentStep < totalSteps" type="button" @click="goNextStep" class="px-8 py-3">Next Step</PrimaryButton>
                             <PrimaryButton v-else :disabled="form.processing" class="px-10 py-3 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200">
                                 {{ form.processing ? 'Optimizing & Watermarking...' : (editingProperty ? 'Update Property' : 'Publish Property') }}
                             </PrimaryButton>
+                        </div>
+                    </div>
                         </div>
                     </div>
                 </form>
@@ -446,4 +776,16 @@ const toggleHighlight = (item) => {
 
 <style scoped>
 .aspect-square { aspect-ratio: 1 / 1; }
+.listing-modal :is(input:not([type='checkbox']):not([type='file']), select, textarea) {
+    border-radius: 0.85rem;
+    border: 1px solid #dbe4f0;
+    background: #ffffff;
+    min-height: 44px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition: all 0.15s ease;
+}
+.listing-modal :is(input:not([type='checkbox']):not([type='file']), select, textarea):focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
 </style>

@@ -27,10 +27,11 @@ class PropertyController extends Controller
     public function index(): Response
     {
         $properties = Property::query()
-            ->with('user')
+            ->with(['user', 'agent'])
             ->latest()
             ->paginate(12)
-            ->withQueryString();
+            ->withQueryString()
+            ->through(fn (Property $property) => $this->transformPropertyForDashboard($property));
 
         $statsQuery = Property::query();
         $propertyStats = [
@@ -64,6 +65,77 @@ class PropertyController extends Controller
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
+    protected function transformPropertyForDashboard(Property $property): array
+    {
+        $photos = is_array($property->photos) ? array_values(array_filter($property->photos)) : [];
+        $image = $property->image ?: ($photos[0] ?? null);
+
+        return [
+            'id' => $property->id,
+            'title' => (string) $property->title,
+            'slug' => $property->slug,
+            'description' => (string) ($property->description ?? ''),
+            'price' => (float) ($property->price ?? 0),
+            'status' => (string) ($property->status ?? ''),
+            'listing_type' => (string) ($property->listing_type ?? ''),
+            'listing_status' => (string) ($property->listing_status ?? ''),
+            'type' => (string) ($property->type ?? ''),
+            'category' => (string) ($property->category ?? ''),
+            'address' => (string) ($property->address ?? ''),
+            'city' => (string) ($property->city ?? ''),
+            'area' => (string) ($property->area ?? ''),
+            'locality' => (string) ($property->locality ?? ''),
+            'society_name' => (string) ($property->society_name ?? ''),
+            'bhk' => (string) ($property->bhk ?? ''),
+            'bedrooms' => $property->bedrooms !== null ? (int) $property->bedrooms : null,
+            'bathrooms' => $property->bathrooms !== null ? (int) $property->bathrooms : null,
+            'garage' => $property->garage !== null ? (int) $property->garage : null,
+            'size' => $property->size !== null ? (int) $property->size : null,
+            'built_up_area' => $property->built_up_area !== null ? (float) $property->built_up_area : null,
+            'carpet_area' => $property->carpet_area !== null ? (float) $property->carpet_area : null,
+            'age_of_property' => $property->age_of_property !== null ? (int) $property->age_of_property : null,
+            'balconies' => $property->balconies !== null ? (int) $property->balconies : null,
+            'furnish_type' => (string) ($property->furnish_type ?? ''),
+            'covered_parking' => (string) ($property->covered_parking ?? ''),
+            'open_parking' => (string) ($property->open_parking ?? ''),
+            'tenant_type' => (string) ($property->tenant_type ?? ''),
+            'bachelor_preference' => (string) ($property->bachelor_preference ?? ''),
+            'pet_friendly' => (bool) ($property->pet_friendly ?? false),
+            'price_negotiable' => (bool) ($property->price_negotiable ?? false),
+            'pg_food_included' => (bool) ($property->pg_food_included ?? false),
+            'available_from' => $property->available_from?->toDateString(),
+            'maintenance_charges' => $property->maintenance_charges !== null ? (float) $property->maintenance_charges : null,
+            'maintenance_type' => (string) ($property->maintenance_type ?? ''),
+            'security_deposit' => (string) ($property->security_deposit ?? ''),
+            'lock_in_period' => (string) ($property->lock_in_period ?? ''),
+            'booking_amount' => $property->booking_amount !== null ? (float) $property->booking_amount : null,
+            'food_charges' => $property->food_charges !== null ? (float) $property->food_charges : null,
+            'brokerage_charge' => (string) ($property->brokerage_charge ?? ''),
+            'brokerage_negotiable' => (bool) ($property->brokerage_negotiable ?? false),
+            'parking_charges_type' => (string) ($property->parking_charges_type ?? ''),
+            'painting_charges' => (string) ($property->painting_charges ?? ''),
+            'floor_no' => $property->floor_no !== null ? (int) $property->floor_no : null,
+            'total_floors' => $property->total_floors !== null ? (int) $property->total_floors : null,
+            'facing' => (string) ($property->facing ?? ''),
+            'servant_room' => (bool) ($property->servant_room ?? false),
+            'rera_id' => (string) ($property->rera_id ?? ''),
+            'amenities' => is_array($property->amenities) ? $property->amenities : [],
+            'highlights' => is_array($property->highlights) ? $property->highlights : [],
+            'image' => $image,
+            'photos' => $photos,
+            'is_featured' => (bool) ($property->is_featured ?? false),
+            'latitude' => $property->latitude !== null ? (float) $property->latitude : null,
+            'longitude' => $property->longitude !== null ? (float) $property->longitude : null,
+            'agent_id' => $property->agent_id,
+            'agent' => AgentPresenter::forProperty($property->agent),
+            'created_at' => $property->created_at?->toIso8601String(),
+            'updated_at' => $property->updated_at?->toIso8601String(),
+        ];
+    }
+
     public function publicIndex(): Response
     {
         return Inertia::render('Properties/Index');
@@ -88,7 +160,8 @@ class PropertyController extends Controller
         $validated = $request->validate($this->listingRules(strict: true));
         $payload = $this->buildPayload($request, $validated);
 
-        Auth::user()->properties()->create($payload);
+        $property = Auth::user()->properties()->create($payload);
+        $property->update($this->finalizeComputedSeoPayload($property, $payload));
 
         return $this->redirectAfterMutation('Property created successfully.');
     }
@@ -99,6 +172,7 @@ class PropertyController extends Controller
 
         $validated = $request->validate($this->listingRules(strict: true));
         $payload = $this->buildPayload($request, $validated, $property);
+        $payload = $this->finalizeComputedSeoPayload($property, $payload);
 
         $property->update($payload);
 
@@ -155,7 +229,21 @@ class PropertyController extends Controller
             unset($validated['existing_photos'], $validated['new_photos']);
         }
 
-        return PropertyPayloadNormalizer::forStorage($validated);
+        $payload = PropertyPayloadNormalizer::forStorage($validated);
+
+        return PropertyPayloadNormalizer::applyComputedTitleAndSeo($payload, $property?->id);
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     * @return array<string, mixed>
+     */
+    protected function finalizeComputedSeoPayload(Property $property, array $payload): array
+    {
+        $computed = PropertyPayloadNormalizer::applyComputedTitleAndSeo($payload, $property->id);
+        $computed['slug'] = Property::uniqueSlug((string) $computed['title'], $property->id);
+
+        return $computed;
     }
 
     /**
@@ -243,7 +331,7 @@ class PropertyController extends Controller
         $required = $strict ? 'required' : 'sometimes';
 
         $rules = [
-            'title' => [$required, 'string', 'max:255'],
+            'title' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => [$required, 'numeric', 'min:0'],
             'status' => [$required, 'string'],
@@ -272,11 +360,15 @@ class PropertyController extends Controller
             'tenant_type' => ['nullable', 'string'],
             'bachelor_preference' => ['nullable', 'string'],
             'pet_friendly' => ['sometimes', 'boolean'],
+            'price_negotiable' => ['sometimes', 'boolean'],
+            'pg_food_included' => ['sometimes', 'boolean'],
             'available_from' => ['nullable', 'date'],
             'maintenance_charges' => ['nullable', 'numeric'],
             'maintenance_type' => ['nullable', 'string'],
             'security_deposit' => ['nullable', 'string'],
             'lock_in_period' => ['nullable', 'string'],
+            'booking_amount' => ['nullable', 'numeric', 'min:0'],
+            'food_charges' => ['nullable', 'numeric', 'min:0'],
             'brokerage_charge' => ['nullable', 'string'],
             'brokerage_negotiable' => ['sometimes', 'boolean'],
             'parking_charges_type' => ['nullable', 'string'],
@@ -294,6 +386,8 @@ class PropertyController extends Controller
             'title_locked' => ['sometimes', 'boolean'],
             'area' => ['nullable', 'string'],
             'locality' => ['nullable', 'string'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
         ];
 
         if (! $strict) {
