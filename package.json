@@ -13,6 +13,12 @@
         "leaflet": "^1.9.4",
         "quill": "^2.0.3"
     },
+    "browserslist": [
+        "Chrome >= 90",
+        "Firefox >= 90",
+        "Safari >= 15",
+        "Edge >= 90"
+    ],
     "devDependencies": {
         "@inertiajs/vue3": "^2.0.0",
         "@tailwindcss/forms": "^0.5.11",

@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\LeadController as ApiLeadController;
 use App\Http\Controllers\Api\PriceDropAlertController;
 use App\Http\Controllers\Api\PropertyListingController;
 use App\Http\Controllers\Dashboard\GeocodeController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
 use App\Http\Controllers\PublicAgentController;
@@ -24,9 +25,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-});
+Route::get('/', [HomeController::class, 'welcome']);
 
 Route::get('/about', function () {
     return Inertia::render('About');

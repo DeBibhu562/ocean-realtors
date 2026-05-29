@@ -30,9 +30,11 @@ const sizeClass = computed(() => {
         :aria-label="showLink ? 'Ocean Realtors — Home' : undefined"
     >
         <img
-            src="/img/logo_oceanrealtors.png"
+            src="/img/logo_oceanrealtors.webp"
             alt="Ocean Realtors"
             :class="[sizeClass, 'w-auto object-contain']"
+            width="264"
+            height="80"
             loading="eager"
             decoding="async"
         />

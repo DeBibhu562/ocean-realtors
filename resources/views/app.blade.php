@@ -15,21 +15,42 @@
             <link rel="preload" as="image" href="{{ asset('images/hero/hero-desktop.webp') }}" type="image/webp" media="(min-width: 769px)" fetchpriority="high">
         @endif
 
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        @if (! empty($lcpPreloadImage))
+            <link rel="preload" as="image" href="{{ $lcpPreloadImage }}" type="image/webp" fetchpriority="high">
+        @endif
 
-        <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-            media="print"
-            onload="this.media='all'"
-        >
-        <noscript>
-            <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-        </noscript>
+        <link rel="preload" href="{{ asset('fonts/inter/inter-400.woff2') }}" as="font" type="font/woff2" crossorigin>
 
         <style>
-            body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
+            @font-face {
+                font-family: 'Inter';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url('{{ asset('fonts/inter/inter-400.woff2') }}') format('woff2');
+            }
+            @font-face {
+                font-family: 'Inter';
+                font-style: normal;
+                font-weight: 500;
+                font-display: optional;
+                src: url('{{ asset('fonts/inter/inter-500.woff2') }}') format('woff2');
+            }
+            @font-face {
+                font-family: 'Inter';
+                font-style: normal;
+                font-weight: 600;
+                font-display: optional;
+                src: url('{{ asset('fonts/inter/inter-600.woff2') }}') format('woff2');
+            }
+            @font-face {
+                font-family: 'Inter';
+                font-style: normal;
+                font-weight: 700;
+                font-display: optional;
+                src: url('{{ asset('fonts/inter/inter-700.woff2') }}') format('woff2');
+            }
+            body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; }
         </style>
 
         @routes

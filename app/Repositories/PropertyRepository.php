@@ -28,7 +28,10 @@ class PropertyRepository
 
     public function paginatedForListing(Request $request): LengthAwarePaginator
     {
-        $query = Property::query()->with(['agent', 'user']);
+        $query = Property::query()->with([
+            'user',
+            'agent' => fn ($q) => $q->withCount('properties'),
+        ]);
 
         $this->applyFilters($query, $request);
 
@@ -51,7 +54,10 @@ class PropertyRepository
     public function featuredForHomepage(?string $type = null, int $limit = 6): Collection
     {
         $query = Property::query()
-            ->with(['agent', 'user'])
+            ->with([
+                'user',
+                'agent' => fn ($q) => $q->withCount('properties'),
+            ])
             ->where('is_featured', true);
 
         if (Schema::hasColumn('properties', 'listing_status')) {
@@ -84,7 +90,10 @@ class PropertyRepository
     public function similar(Property $property, int $limit = 6): Collection
     {
         $list = Property::query()
-            ->with(['agent', 'user'])
+            ->with([
+                'user',
+                'agent' => fn ($q) => $q->withCount('properties'),
+            ])
             ->where('id', '!=', $property->id)
             ->where('city', $property->city)
             ->latest()
@@ -94,7 +103,10 @@ class PropertyRepository
         if ($list->count() < $limit) {
             $needed = $limit - $list->count();
             $more = Property::query()
-                ->with(['agent', 'user'])
+                ->with([
+                'user',
+                'agent' => fn ($q) => $q->withCount('properties'),
+            ])
                 ->where('id', '!=', $property->id)
                 ->whereNotIn('id', $list->pluck('id'))
                 ->latest()
@@ -234,7 +246,7 @@ class PropertyRepository
             $images['image'] ? [$images['image']] : [],
             $photos
         ))));
-        $agent = AgentPresenter::forProperty($property->agent);
+        $agent = AgentPresenter::forProperty($property->agent, $property);
 
         return [
             'id' => $property->id,

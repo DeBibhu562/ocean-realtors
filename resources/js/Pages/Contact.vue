@@ -1,5 +1,8 @@
 <script setup>
-import { AppLayout, BaseButton, BaseInput, ToastNotification } from '@/Components';
+import AppLayout from '@/Components/AppLayout.vue';
+import BaseButton from '@/Components/BaseButton.vue';
+import BaseInput from '@/Components/BaseInput.vue';
+import ToastNotification from '@/Components/ToastNotification.vue';
 import StaticPageHero from '@/Components/StaticPageHero.vue';
 import { Link } from '@inertiajs/vue3';
 import PageSeoHead from '@/Components/PageSeoHead.vue';

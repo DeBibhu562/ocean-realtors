@@ -1,5 +1,6 @@
 <script setup>
-import { AppLayout, BaseButton } from '@/Components';
+import AppLayout from '@/Components/AppLayout.vue';
+import BaseButton from '@/Components/BaseButton.vue';
 import StatsSection from '@/Components/Home/StatsSection.vue';
 import PageSeoHead from '@/Components/PageSeoHead.vue';
 import { siteContact } from '@/config/site';

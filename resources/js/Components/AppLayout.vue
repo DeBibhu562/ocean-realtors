@@ -1,13 +1,14 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, defineAsyncComponent } from 'vue';
 import { Link, Head } from '@inertiajs/vue3';
-import Footer from './Footer.vue';
 import NewsletterSection from './Home/NewsletterSection.vue';
 import SecondaryNavbar from './SecondaryNavbar.vue';
 import WhatsAppIcon from '@/Components/WhatsAppIcon.vue';
 import { siteContact, whatsappUrl } from '@/config/site';
 
 import { usePropertyFilters } from '@/Composables/usePropertyFilters';
+
+const Footer = defineAsyncComponent(() => import('./Footer.vue'));
 
 const props = defineProps({
     title: String,
@@ -51,9 +52,11 @@ const navLinks = [
                 <!-- Logo -->
                 <Link href="/" class="flex items-center" aria-label="Ocean Realtors home">
                     <img
-                        src="/img/logo_oceanrealtors.png"
+                        src="/img/logo_oceanrealtors.webp"
                         alt="Ocean Realtors"
                         class="h-8 w-auto object-contain sm:h-9"
+                        width="264"
+                        height="80"
                         loading="eager"
                         decoding="async"
                     />

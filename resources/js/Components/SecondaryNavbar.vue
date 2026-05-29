@@ -39,9 +39,11 @@ const handleSearch = () => {
             <div class="flex items-center gap-1.5 md:gap-4 min-w-0 shrink-0">
                 <Link href="/" aria-label="Ocean Realtors home" class="shrink-0">
                     <img
-                        src="/img/logo_oceanrealtors.png"
+                        src="/img/logo_oceanrealtors.webp"
                         alt="Ocean Realtors"
                         class="h-7 w-auto max-w-[110px] object-contain md:h-8 md:max-w-none"
+                        width="264"
+                        height="80"
                         loading="eager"
                         decoding="async"
                     />

@@ -16,6 +16,9 @@ class ImageService
     protected const BLOG_DIR = 'blog';
     protected const WRITER_DIR = 'blog-writers';
 
+    /** @var list<int> */
+    public const CARD_VARIANT_WIDTHS = [480, 640, 960];
+
     public function __construct()
     {
         // Explicitly initialize with GD driver for v4.0.4
@@ -44,19 +47,79 @@ class ImageService
 
     protected function processAndStorePropertyImage($image): string
     {
-        $image->scale(width: 1200);
-        $this->applyCenterWatermark($image);
-
-        $filename = self::PROPERTY_DIR.'/'.uniqid('', true).'.webp';
-        $encoded = $image->encode(new WebpEncoder(quality: 80));
+        $uid = uniqid('', true);
+        $baseFilename = self::PROPERTY_DIR.'/'.$uid.'.webp';
 
         if (! Storage::disk('public')->exists(self::PROPERTY_DIR)) {
             Storage::disk('public')->makeDirectory(self::PROPERTY_DIR);
         }
 
-        Storage::disk('public')->put($filename, (string) $encoded);
+        $encodedOriginal = (string) $image->encode(new WebpEncoder(quality: 90));
 
-        return '/storage/'.$filename;
+        $this->writeScaledVariants($encodedOriginal, $baseFilename, [1200, ...self::CARD_VARIANT_WIDTHS]);
+
+        return '/storage/'.$baseFilename;
+    }
+
+    /**
+     * Create missing 480/640/960 card variants for an existing property image.
+     */
+    public function ensureCardVariantsForPublicPath(string $publicPath): int
+    {
+        $relativePath = $this->publicPathToRelative($publicPath);
+        if ($relativePath === null || ! Storage::disk('public')->exists($relativePath)) {
+            return 0;
+        }
+
+        if (preg_match('/-\d+\.webp$/i', $relativePath)) {
+            return 0;
+        }
+
+        $absolutePath = Storage::disk('public')->path($relativePath);
+        $encodedOriginal = (string) $this->manager->decode($absolutePath)->encode(new WebpEncoder(quality: 90));
+
+        return $this->writeScaledVariants(
+            $encodedOriginal,
+            $relativePath,
+            self::CARD_VARIANT_WIDTHS,
+            skipExisting: true,
+        );
+    }
+
+    /**
+     * @param  list<int>  $widths
+     */
+    protected function writeScaledVariants(
+        string $encodedOriginal,
+        string $relativeBasePath,
+        array $widths,
+        bool $skipExisting = false,
+    ): int {
+        $created = 0;
+
+        foreach ($widths as $width) {
+            $filename = $width === 1200 && ! str_contains($relativeBasePath, '-')
+                ? $relativeBasePath
+                : preg_replace('/\.webp$/', '-'.$width.'.webp', $relativeBasePath);
+
+            if ($skipExisting && Storage::disk('public')->exists($filename)) {
+                continue;
+            }
+
+            $variant = $this->manager->decode($encodedOriginal);
+            if ($variant->width() > $width) {
+                $variant->scale(width: $width);
+            }
+            $this->applyCenterWatermark($variant);
+
+            Storage::disk('public')->put(
+                $filename,
+                (string) $variant->encode(new WebpEncoder(quality: 80))
+            );
+            $created++;
+        }
+
+        return $created;
     }
 
     protected function applyCenterWatermark($image): void

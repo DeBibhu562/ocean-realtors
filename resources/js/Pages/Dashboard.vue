@@ -1,14 +1,14 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, ref, watch } from 'vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import SecondaryButton from '@/Components/SecondaryButton.vue';
 import Modal from '@/Components/Modal.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
-import ListingLocationMap from '@/Components/Listing/ListingLocationMap.vue';
+const ListingLocationMap = defineAsyncComponent(() => import('@/Components/Listing/ListingLocationMap.vue'));
 import { useListingLocationOptions } from '@/Composables/useListingLocationOptions';
 
 const props = defineProps({
@@ -24,6 +24,10 @@ const props = defineProps({
     pendingReviewsCount: {
         type: Number,
         default: 0,
+    },
+    agents: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -74,6 +78,7 @@ const form = useForm({
     floor_no: '', total_floors: '', facing: 'North', servant_room: false, rera_id: '',
     highlights: [], existing_photos: [], new_photos: [],
     area: '', locality: '', latitude: '', longitude: '',
+    agent_id: '',
     _method: null
 });
 
@@ -717,6 +722,17 @@ const goPrevStep = () => {
 
                     <!-- STEP 6 -->
                     <div v-if="currentStep === 6" class="space-y-8">
+                        <div v-if="agents.length" class="space-y-2">
+                            <InputLabel value="Listing agent" />
+                            <select v-model="form.agent_id" class="w-full rounded-lg border-gray-300 dark:bg-gray-900">
+                                <option value="">Default agency agent</option>
+                                <option v-for="agent in agents" :key="agent.id" :value="agent.id">
+                                    {{ agent.name }}{{ agent.city ? ` (${agent.city})` : '' }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.agent_id" />
+                            <p class="text-xs text-gray-500">Assigns this property to the agent profile and listing count.</p>
+                        </div>
                         <div class="space-y-6 bg-gray-50 dark:bg-gray-900 p-6 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                             <div class="flex justify-between items-center">
                                 <h3 class="font-bold text-lg">Property Media (Max 20)</h3>

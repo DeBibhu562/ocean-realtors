@@ -4,6 +4,12 @@ namespace App\Support;
 
 class ListingImage
 {
+    /** @var list<int> */
+    private const CARD_WIDTHS = [480, 640, 960];
+
+    /** @var list<int> */
+    private const DEFAULT_WIDTH_PRIORITY = [640, 480, 960];
+
     /**
      * Card-sized image URL and srcset for listing grids (mobile ~320–676px wide).
      *
@@ -19,17 +25,46 @@ class ListingImage
             return ['image' => $imageUrl, 'image_srcset' => null];
         }
 
-        $cardUrl = preg_replace('/\.webp$/i', '-640.webp', $imageUrl) ?? $imageUrl;
-        $relative = ltrim(str_replace('/storage/', '', $cardUrl), '/');
-        $fullPath = storage_path('app/public/'.$relative);
+        $relative = ltrim(str_replace('/storage/', '', $imageUrl), '/');
+        $basePath = storage_path('app/public/'.$relative);
+        $availableVariants = [];
 
-        if (is_file($fullPath)) {
-            return [
-                'image' => $cardUrl,
-                'image_srcset' => $cardUrl.' 640w, '.$imageUrl.' 1200w',
-            ];
+        foreach (self::CARD_WIDTHS as $width) {
+            $variantUrl = preg_replace('/\.webp$/i', '-'.$width.'.webp', $imageUrl) ?? $imageUrl;
+            $variantRelative = ltrim(str_replace('/storage/', '', $variantUrl), '/');
+            $variantPath = storage_path('app/public/'.$variantRelative);
+
+            if (is_file($variantPath)) {
+                $availableVariants[$width] = $variantUrl;
+            }
         }
 
-        return ['image' => $imageUrl, 'image_srcset' => null];
+        $srcsetParts = [];
+        foreach (self::CARD_WIDTHS as $width) {
+            if (isset($availableVariants[$width])) {
+                $srcsetParts[] = $availableVariants[$width].' '.$width.'w';
+            }
+        }
+
+        if (is_file($basePath)) {
+            $srcsetParts[] = $imageUrl.' 1200w';
+        }
+
+        if ($srcsetParts === []) {
+            return ['image' => $imageUrl, 'image_srcset' => null];
+        }
+
+        $defaultImage = $imageUrl;
+        foreach (self::DEFAULT_WIDTH_PRIORITY as $width) {
+            if (isset($availableVariants[$width])) {
+                $defaultImage = $availableVariants[$width];
+                break;
+            }
+        }
+
+        return [
+            'image' => $defaultImage,
+            'image_srcset' => implode(', ', $srcsetParts),
+        ];
     }
 }

@@ -47,6 +47,7 @@ const isKeywordFieldFocused = ref(false);
 
 let isUpdatingFromUrl = false;
 let isInitialized = false;
+let hasAppliedServerListings = false;
 let abortController = null;
 let debounceTimeout = null;
 let keywordDebounceTimeout = null;
@@ -216,6 +217,8 @@ export function usePropertyFilters(options = { autoFetch: false }) {
     });
 
     const applyServerListings = () => {
+        if (hasAppliedServerListings) return false;
+
         const initial = page.props.initialListings;
         if (initial === undefined) return false;
 
@@ -223,6 +226,7 @@ export function usePropertyFilters(options = { autoFetch: false }) {
         total.value = Number(page.props.initialTotal ?? results.value.length);
         hasMore.value = Boolean(page.props.initialHasMore);
         filters.page = Number(page.props.initialPage ?? 1);
+        hasAppliedServerListings = true;
 
         return true;
     };
@@ -327,9 +331,7 @@ export function usePropertyFilters(options = { autoFetch: false }) {
                 if (newUrl === oldUrl || isUpdatingFromUrl) return;
 
                 applyUrlParamsToFilters(true);
-                if (!applyServerListings()) {
-                    fetchProperties(false, { allowShortKeyword: true });
-                }
+                fetchProperties(false, { allowShortKeyword: true });
             },
         );
     }

@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAgentRequest;
 use App\Http\Requests\UpdateAgentRequest;
 use App\Models\Agent;
 use App\Models\Property;
+use App\Support\AgentResolver;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -76,15 +77,33 @@ class AgentController extends Controller
             'agent' => array_merge($agent->toPublicArray(), [
                 'is_active' => (bool) $agent->is_active,
             ]),
+            'properties' => Property::query()
+                ->orderBy('title')
+                ->get(['id', 'title', 'city', 'agent_id'])
+                ->map(fn (Property $property) => [
+                    'id' => $property->id,
+                    'title' => $property->title,
+                    'city' => $property->city,
+                    'agent_id' => $property->agent_id,
+                ])
+                ->values()
+                ->all(),
+            'assignedPropertyIds' => $agent->properties()->pluck('id')->all(),
         ]);
     }
 
     public function update(UpdateAgentRequest $request, Agent $agent): RedirectResponse
     {
         $data = $request->validated();
-        DB::transaction(function () use ($request, $agent, &$data) {
+        $propertyIds = $request->validated('property_ids');
+
+        DB::transaction(function () use ($request, $agent, &$data, $propertyIds) {
             $data = $this->prepareData($data, $request, $agent);
             $agent->update($data);
+
+            if (is_array($propertyIds)) {
+                $this->syncAgentProperties($agent, $propertyIds);
+            }
         });
 
         return redirect()->route('admin.agents.index')->with('message', 'Agent updated successfully.');
@@ -139,5 +158,24 @@ class AgentController extends Controller
         }
 
         return $validated;
+    }
+
+    /**
+     * @param  list<int|string>  $propertyIds
+     */
+    protected function syncAgentProperties(Agent $agent, array $propertyIds): void
+    {
+        $ids = array_values(array_unique(array_map('intval', $propertyIds)));
+
+        if ($ids !== []) {
+            Property::query()->whereIn('id', $ids)->update(['agent_id' => $agent->id]);
+        }
+
+        $fallbackId = AgentResolver::defaultId();
+
+        Property::query()
+            ->where('agent_id', $agent->id)
+            ->when($ids !== [], fn ($q) => $q->whereNotIn('id', $ids))
+            ->update(['agent_id' => $fallbackId]);
     }
 }

@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { defineAsyncComponent, ref, computed } from 'vue';
 import { usePropertyFilters } from '@/Composables/usePropertyFilters';
 import { useLocationSuggest, applyLocationSuggestion } from '@/Composables/useLocationSuggest';
-import LocationSuggestionList from '@/Components/Location/LocationSuggestionList.vue';
+const LocationSuggestionList = defineAsyncComponent(() => import('@/Components/Location/LocationSuggestionList.vue'));
 
 const { filters, runSearch } = usePropertyFilters();
 const {
@@ -41,14 +41,12 @@ const headline = computed(
     () => `Properties to ${activeCategory.value.id === 'rent' ? 'rent' : 'buy'} in ${cityLabel.value}`,
 );
 
-onMounted(() => {
-    const load = () => loadListedCities();
-    if (typeof requestIdleCallback === 'function') {
-        requestIdleCallback(load, { timeout: 2000 });
-    } else {
-        setTimeout(load, 1);
-    }
-});
+const hasLoadedCities = ref(false);
+const ensureListedCitiesLoaded = () => {
+    if (hasLoadedCities.value) return;
+    hasLoadedCities.value = true;
+    loadListedCities();
+};
 
 const onKeywordInput = () => fetchSuggestions(filters.keyword);
 
@@ -71,6 +69,11 @@ const handleSearch = () => {
 const selectCity = (city) => {
     filters.city = typeof city === 'string' ? city : city.name;
     showCityDropdown.value = false;
+};
+
+const toggleCityDropdown = () => {
+    showCityDropdown.value = !showCityDropdown.value;
+    if (showCityDropdown.value) ensureListedCitiesLoaded();
 };
 </script>
 
@@ -142,7 +145,7 @@ const selectCity = (city) => {
                             <button
                                 type="button"
                                 class="flex h-14 w-full items-center justify-between px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-gray-50"
-                                @click="showCityDropdown = !showCityDropdown"
+                                @click="toggleCityDropdown"
                             >
                                 <span class="truncate">{{ filters.city || 'Select City' }}</span>
                                 <svg
@@ -185,6 +188,7 @@ const selectCity = (city) => {
                             <select
                                 v-model="filters.city"
                                 class="w-full rounded-lg border-gray-200 bg-gray-50 px-3 py-2.5 text-sm font-semibold text-text-primary focus:border-primary focus:ring-primary"
+                                @focus="ensureListedCitiesLoaded"
                             >
                                 <option value="">Select city</option>
                                 <option v-for="c in listedCities" :key="c.name" :value="c.name">{{ c.name }}</option>

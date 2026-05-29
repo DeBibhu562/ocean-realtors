@@ -35,6 +35,8 @@ class UpdateAgentRequest extends FormRequest
             'languages.*' => ['string', 'max:64'],
             'is_active' => ['boolean'],
             'avatar' => ['nullable', 'image', 'max:2048'],
+            'property_ids' => ['nullable', 'array'],
+            'property_ids.*' => ['integer', 'exists:properties,id'],
         ];
     }
 }

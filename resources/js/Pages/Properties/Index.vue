@@ -1,12 +1,13 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, defineAsyncComponent } from 'vue';
 import AppLayout from '@/Components/AppLayout.vue';
 import PageSeoHead from '@/Components/PageSeoHead.vue';
-import FilterSidebar from '@/Components/Filters/FilterSidebar.vue';
 import ListingToolbar from '@/Components/Listing/ListingToolbar.vue';
 import PropertyGrid from '@/Components/Listing/PropertyGrid.vue';
-import NewsletterSection from '@/Components/Home/NewsletterSection.vue';
+import FilterSidebar from '@/Components/Filters/FilterSidebar.vue';
 import { usePropertyFilters } from '@/Composables/usePropertyFilters';
+
+const MobileFilterSheet = defineAsyncComponent(() => import('@/Components/Filters/MobileFilterSheet.vue'));
 
 defineProps({
     initialListings: { type: Array, default: () => [] },
@@ -100,42 +101,13 @@ const isMobileFiltersOpen = ref(false);
         </div>
 
         <!-- Mobile Filter Sheet -->
-        <Transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform translate-y-full"
-            enter-to-class="transform translate-y-0"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform translate-y-0"
-            leave-to-class="transform translate-y-full"
-        >
-            <div v-if="isMobileFiltersOpen" class="fixed inset-0 z-[100] flex flex-col">
-                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="isMobileFiltersOpen = false"></div>
-                <div class="relative mt-auto bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh]">
-                    <!-- Header -->
-                    <div class="px-6 py-4 border-b border-border flex items-center justify-between">
-                        <h2 class="text-base font-semibold text-text-primary">Filters</h2>
-                        <button @click="isMobileFiltersOpen = false" class="p-2 text-text-muted hover:text-text-primary">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18" /></svg>
-                        </button>
-                    </div>
-
-                    <!-- Scrollable Area -->
-                    <div class="px-6 py-4 overflow-y-auto flex-1">
-                        <FilterSidebar 
-                            :filters="filters" 
-                            :activeFilterCount="activeFilterCount"
-                            @clear="clearFilters"
-                        />
-                    </div>
-
-                    <!-- Footer Action -->
-                    <div class="p-6 bg-white border-t border-border">
-                        <button @click="isMobileFiltersOpen = false" class="w-full bg-primary text-white py-3 rounded-lg font-semibold text-sm">
-                            Show {{ total }} Properties
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Transition>
+        <MobileFilterSheet
+            v-if="isMobileFiltersOpen"
+            :filters="filters"
+            :active-filter-count="activeFilterCount"
+            :total="total"
+            @close="isMobileFiltersOpen = false"
+            @clear="clearFilters"
+        />
     </AppLayout>
 </template>

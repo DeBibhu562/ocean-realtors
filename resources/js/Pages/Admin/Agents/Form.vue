@@ -10,6 +10,8 @@ import InputError from '@/Components/InputError.vue';
 
 const props = defineProps({
     agent: { type: Object, default: null },
+    properties: { type: Array, default: () => [] },
+    assignedPropertyIds: { type: Array, default: () => [] },
 });
 
 const isEdit = !!props.agent;
@@ -31,6 +33,7 @@ const form = useForm({
     languages: props.agent?.languages?.length ? [...props.agent.languages] : ['English', 'Hindi'],
     is_active: props.agent?.is_active ?? true,
     avatar: null,
+    property_ids: [...(props.assignedPropertyIds || [])],
 });
 
 const onAvatarChange = (e) => {
@@ -148,6 +151,29 @@ const submit = () => {
                             {{ lang }}
                             <button type="button" @click="removeLanguage(lang)" class="hover:text-red-600">×</button>
                         </span>
+                    </div>
+                </div>
+
+                <div v-if="isEdit && properties.length" class="space-y-3 border-t border-gray-100 pt-6">
+                    <InputLabel value="Assigned properties" />
+                    <p class="text-xs text-gray-500">Link listings to this agent. Unselected properties previously assigned here move to the default agency agent.</p>
+                    <div class="max-h-56 overflow-y-auto rounded-xl border border-gray-200 divide-y">
+                        <label
+                            v-for="property in properties"
+                            :key="property.id"
+                            class="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 cursor-pointer"
+                        >
+                            <input
+                                v-model="form.property_ids"
+                                type="checkbox"
+                                :value="property.id"
+                                class="mt-1 rounded text-primary focus:ring-primary"
+                            />
+                            <span class="text-sm">
+                                <span class="font-semibold text-gray-900">{{ property.title }}</span>
+                                <span v-if="property.city" class="text-gray-500"> · {{ property.city }}</span>
+                            </span>
+                        </label>
                     </div>
                 </div>
 

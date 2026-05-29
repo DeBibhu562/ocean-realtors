@@ -37,13 +37,13 @@ onMounted(() => {
                     : 'flex flex-col gap-4'
             ]"
         >
-            <template v-for="property in properties" :key="property.id">
+            <template v-for="(property, idx) in properties" :key="property.id">
                 <Transition
                     enter-active-class="transition duration-200 ease-out"
                     enter-from-class="opacity-0 translate-y-2"
                     enter-to-class="opacity-100 translate-y-0"
                 >
-                    <PropertyCard v-if="view === 'grid'" :property="property" />
+                    <PropertyCard v-if="view === 'grid'" :property="property" :lazy-image="idx !== 0" />
                     <PropertyListCard v-else :property="property" />
                 </Transition>
             </template>

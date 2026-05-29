@@ -1,15 +1,12 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import { AppLayout } from '@/Components';
+import AppLayout from '@/Components/AppLayout.vue';
 import PropertyGallery from '@/Components/property/PropertyGallery.vue';
 import PropertyDetails from '@/Components/property/PropertyDetails.vue';
-import PropertyMap from '@/Components/property/PropertyMap.vue';
 import AgentCard from '@/Components/property/AgentCard.vue';
 import EnquiryForm from '@/Components/property/EnquiryForm.vue';
 import SimilarProperties from '@/Components/property/SimilarProperties.vue';
-import ReviewForm from '@/Components/Reviews/ReviewForm.vue';
-import ReviewList from '@/Components/Reviews/ReviewList.vue';
 import QuickContactModal from '@/Components/property/QuickContactModal.vue';
 import PropertyContactBar from '@/Components/property/PropertyContactBar.vue';
 import { usePropertySeo } from '@/Composables/usePropertySeo';
@@ -19,11 +16,6 @@ const props = defineProps({
     property: {
         type: Object,
         required: true,
-    },
-    reviews: { type: Array, default: () => [] },
-    review_stats: {
-        type: Object,
-        default: () => ({ average_rating: 0, total_count: 0 }),
     },
 });
 
@@ -68,27 +60,6 @@ const openContactModal = (channel) => {
                             :virtual-tour-url="property.virtual_tour_url"
                         />
                         <PropertyDetails :property="property" />
-                        <div class="space-y-5 rounded-2xl border border-primary/10 bg-white p-4 shadow-premium sm:p-5 md:space-y-6">
-                            <ReviewList
-                                :reviews="reviews"
-                                :review-stats="review_stats"
-                                target-type="property"
-                                :target-id="property.id"
-                                layout="list"
-                                heading="Property reviews"
-                            />
-                            <ReviewForm
-                                target-type="property"
-                                :target-id="property.id"
-                                heading="Review this property"
-                                :show-title="false"
-                            />
-                        </div>
-                        <PropertyMap
-                            :latitude="property.latitude"
-                            :longitude="property.longitude"
-                            :title="property.title"
-                        />
                         <SimilarProperties
                             :property-id="property.id"
                             :city="property.city"

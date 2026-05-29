@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\AgentResolver;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -60,6 +61,12 @@ class Property extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Property $property) {
+            if (empty($property->agent_id)) {
+                $property->agent_id = AgentResolver::defaultId();
+            }
+        });
+
         static::creating(function (Property $property) {
             if (empty($property->slug) && ! empty($property->title)) {
                 $property->slug = static::uniqueSlug($property->title);

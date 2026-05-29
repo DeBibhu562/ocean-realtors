@@ -6,8 +6,10 @@ use App\Models\Agent;
 use App\Models\Property;
 use App\Models\Review;
 use App\Models\SystemSetting;
+use App\Repositories\PropertyRepository;
 use App\Services\ImageService;
 use App\Support\AgentPresenter;
+use App\Support\AgentResolver;
 use App\Support\PropertyPayloadNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +23,8 @@ use Inertia\Response;
 class PropertyController extends Controller
 {
     public function __construct(
-        protected ImageService $imageService
+        protected ImageService $imageService,
+        protected PropertyRepository $propertyRepository
     ) {}
 
     public function index(): Response
@@ -47,8 +50,9 @@ class PropertyController extends Controller
                 method_exists(Agent::class, 'scopeActive'),
                 fn ($q) => $q->active()
             )
+            ->withCount('properties')
             ->orderBy('name')
-            ->get(['id', 'name', 'city']);
+            ->get(['id', 'name', 'city', 'designation']);
 
         $pendingReviewsCount = Schema::hasTable('reviews')
             ? Review::query()->pending()->count()
@@ -130,20 +134,34 @@ class PropertyController extends Controller
             'latitude' => $property->latitude !== null ? (float) $property->latitude : null,
             'longitude' => $property->longitude !== null ? (float) $property->longitude : null,
             'agent_id' => $property->agent_id,
-            'agent' => AgentPresenter::forProperty($property->agent),
+            'agent' => AgentPresenter::forProperty($property->agent, $property),
             'created_at' => $property->created_at?->toIso8601String(),
             'updated_at' => $property->updated_at?->toIso8601String(),
         ];
     }
 
-    public function publicIndex(): Response
+    public function publicIndex(Request $request): Response
     {
-        return Inertia::render('Properties/Index');
+        $paginator = $this->propertyRepository->paginatedForListing($request);
+        $items = $paginator->items();
+
+        return Inertia::render('Properties/Index', [
+            'initialListings' => $items,
+            'initialTotal' => $paginator->total(),
+            'initialPage' => $paginator->currentPage(),
+            'initialLastPage' => $paginator->lastPage(),
+            'initialHasMore' => $paginator->hasMorePages(),
+        ])->withViewData([
+            'lcpPreloadImage' => $items[0]['image'] ?? null,
+        ]);
     }
 
     public function show(Property $property): Response
     {
-        $property->load(['user', 'agent']);
+        $property->load([
+            'user',
+            'agent' => fn ($q) => $q->withCount('properties'),
+        ]);
 
         if (Schema::hasColumn('properties', 'views_count')) {
             $property->increment('views_count');
@@ -230,6 +248,10 @@ class PropertyController extends Controller
         }
 
         $payload = PropertyPayloadNormalizer::forStorage($validated);
+
+        if (empty($payload['agent_id'])) {
+            $payload['agent_id'] = AgentResolver::defaultId();
+        }
 
         return PropertyPayloadNormalizer::applyComputedTitleAndSeo($payload, $property?->id);
     }
@@ -388,6 +410,7 @@ class PropertyController extends Controller
             'locality' => ['nullable', 'string'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'agent_id' => ['nullable', 'integer', 'exists:agents,id'],
         ];
 
         if (! $strict) {
@@ -452,7 +475,7 @@ class PropertyController extends Controller
             'posted_at' => $property->created_at?->toIso8601String(),
             'is_rental' => $isRental,
             'area_display' => $area,
-            'agent' => AgentPresenter::forProperty($property->agent),
+            'agent' => AgentPresenter::forProperty($property->agent, $property),
         ];
     }
 }

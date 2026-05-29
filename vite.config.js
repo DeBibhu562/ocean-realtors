@@ -22,6 +22,50 @@ export default defineConfig({
         }),
         VitePWA({
             registerType: 'autoUpdate',
+            workbox: {
+                cleanupOutdatedCaches: true,
+                clientsClaim: true,
+                skipWaiting: true,
+                runtimeCaching: [
+                    {
+                        urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style' || request.destination === 'worker',
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'static-assets-v2',
+                            expiration: {
+                                maxEntries: 120,
+                                maxAgeSeconds: 60 * 60 * 24 * 14,
+                            },
+                        },
+                    },
+                    {
+                        urlPattern: ({ request }) => request.destination === 'image' || request.destination === 'font',
+                        handler: 'StaleWhileRevalidate',
+                        options: {
+                            cacheName: 'media-assets-v2',
+                            expiration: {
+                                maxEntries: 400,
+                                maxAgeSeconds: 60 * 60 * 24 * 30,
+                            },
+                        },
+                    },
+                    {
+                        urlPattern: ({ url, request }) =>
+                            request.method === 'GET' &&
+                            url.pathname.startsWith('/api/'),
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'api-get-v1',
+                            networkTimeoutSeconds: 3,
+                            cacheableResponse: { statuses: [0, 200] },
+                            expiration: {
+                                maxEntries: 80,
+                                maxAgeSeconds: 60 * 5,
+                            },
+                        },
+                    },
+                ],
+            },
             manifest: {
                 name: 'Ocean Realtors',
                 short_name: 'OceanRealtors',
@@ -61,8 +105,15 @@ export default defineConfig({
             filename: 'build-stats.html'
         })
     ],
+    esbuild: {
+        target: 'es2022',
+        supported: {
+            'class-field': true,
+            'class-static-field': true,
+        },
+    },
     build: {
-        target: 'es2020',
+        target: 'es2022',
         modulePreload: {
             polyfill: false,
         },
@@ -71,6 +122,8 @@ export default defineConfig({
             output: {
                 manualChunks(id) {
                     if (id.includes('node_modules')) {
+                        if (id.includes('@googlemaps')) return 'vendor-googlemaps';
+                        if (id.includes('leaflet')) return 'vendor-leaflet';
                         if (id.includes('vue')) return 'vendor-vue';
                         if (id.includes('@inertiajs')) return 'vendor-inertia';
                         return 'vendor';

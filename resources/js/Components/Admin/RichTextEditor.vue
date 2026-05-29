@@ -1,7 +1,9 @@
 <script setup>
-import { QuillEditor } from '@vueup/vue-quill';
-import '@vueup/vue-quill/dist/vue-quill.snow.css';
-import { computed } from 'vue';
+import { computed, defineAsyncComponent, onMounted } from 'vue';
+
+const QuillEditor = defineAsyncComponent(() =>
+    import('@vueup/vue-quill').then((module) => module.QuillEditor),
+);
 
 const props = defineProps({
     modelValue: { type: String, default: '' },
@@ -22,6 +24,10 @@ const toolbar = [
     ['blockquote', 'link', 'image'],
     ['clean'],
 ];
+
+onMounted(() => {
+    import('@vueup/vue-quill/dist/vue-quill.snow.css');
+});
 </script>
 
 <template>

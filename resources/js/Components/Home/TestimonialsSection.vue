@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
+import axios from 'axios';
 
 const props = defineProps({
     reviews: { type: Array, default: () => [] },
@@ -9,6 +10,10 @@ const props = defineProps({
         default: () => ({ average_rating: 0, total_count: 0 }),
     },
 });
+
+const reviews = ref([...props.reviews]);
+const reviewStats = ref({ ...props.reviewStats });
+const isLoadingReviews = ref(false);
 
 const mapReview = (review) => {
     const parts = (review.title || '').split(' · ');
@@ -22,7 +27,7 @@ const mapReview = (review) => {
     };
 };
 
-const testimonials = computed(() => props.reviews.map(mapReview));
+const testimonials = computed(() => reviews.value.map(mapReview));
 
 const currentIndex = ref(0);
 const isPaused = ref(false);
@@ -31,8 +36,8 @@ let intervalId = null;
 
 const active = computed(() => testimonials.value[currentIndex.value] || null);
 const averageRating = computed(() => {
-    if (props.reviewStats.total_count > 0) {
-        return Number(props.reviewStats.average_rating).toFixed(1);
+    if (reviewStats.value.total_count > 0) {
+        return Number(reviewStats.value.average_rating).toFixed(1);
     }
     if (testimonials.value.length === 0) return '0.0';
     const sum = testimonials.value.reduce((acc, t) => acc + t.rating, 0);
@@ -61,7 +66,25 @@ const startAutoAdvance = () => {
     }, 6000);
 };
 
-onMounted(() => {
+async function fetchSiteReviews() {
+    if (reviews.value.length > 0) return;
+
+    isLoadingReviews.value = true;
+    try {
+        const { data } = await axios.get('/api/reviews', {
+            params: { target_type: 'site', limit: 10 },
+        });
+        reviews.value = data.reviews ?? [];
+        reviewStats.value = data.stats ?? { average_rating: 0, total_count: 0 };
+    } catch (err) {
+        console.error('[Testimonials] Failed to load reviews:', err);
+    } finally {
+        isLoadingReviews.value = false;
+    }
+}
+
+onMounted(async () => {
+    await fetchSiteReviews();
     if (testimonials.value.length > 0) startAutoAdvance();
 });
 onUnmounted(() => {
@@ -108,6 +131,7 @@ onUnmounted(() => {
                     </span>
                     <span v-if="reviewStats.total_count > 0" class="hidden sm:block w-px h-4 bg-border" />
                     <span v-if="reviewStats.total_count > 0">{{ reviewStats.total_count }} verified reviews</span>
+                    <span v-else-if="isLoadingReviews" class="text-text-muted">Loading reviews…</span>
                 </div>
             </div>
 

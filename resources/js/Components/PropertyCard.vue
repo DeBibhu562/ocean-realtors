@@ -22,6 +22,10 @@ const dragDeltaX = ref(0);
 const suppressNextClick = ref(false);
 const mobileAutoSlideEnabled = ref(false);
 let autoSlideTimer = null;
+let visibilityObserver = null;
+const imageRoot = ref(null);
+const inViewport = ref(false);
+const pageVisible = ref(true);
 
 const isRental = computed(
     () => props.property.status === 'rent' || props.property.is_rental === true,
@@ -41,7 +45,7 @@ const agentRef = computed(() => props.property?.agent || null);
 const propertyRef = computed(() => props.property);
 const { phoneDisplay, hasContact } = usePropertyContact(agentRef, propertyRef);
 
-const cardSizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 480px';
+const cardSizes = '(max-width: 640px) 360px, (max-width: 1024px) 46vw, 378px';
 const galleryImages = computed(() => {
     const photos = Array.isArray(props.property?.photos) ? props.property.photos : [];
     const merged = [props.property?.image, ...photos]
@@ -68,7 +72,7 @@ const goNextImage = () => {
 
 const startAutoSlide = () => {
     stopAutoSlide();
-    if (!mobileAutoSlideEnabled.value || galleryImages.value.length <= 1) return;
+    if (!mobileAutoSlideEnabled.value || galleryImages.value.length <= 1 || !inViewport.value || !pageVisible.value) return;
 
     autoSlideTimer = window.setInterval(() => {
         goNextImage();
@@ -131,12 +135,34 @@ watch(
 
 onMounted(() => {
     mobileAutoSlideEnabled.value = window.matchMedia('(pointer: coarse)').matches;
+    pageVisible.value = document.visibilityState === 'visible';
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+    visibilityObserver = new IntersectionObserver(
+        (entries) => {
+            const isVisible = entries.some((entry) => entry.isIntersecting);
+            if (isVisible !== inViewport.value) {
+                inViewport.value = isVisible;
+                if (isVisible) startAutoSlide();
+                else stopAutoSlide();
+            }
+        },
+        { rootMargin: '120px', threshold: 0.2 },
+    );
+    if (imageRoot.value) visibilityObserver.observe(imageRoot.value);
     startAutoSlide();
 });
 
 onUnmounted(() => {
     stopAutoSlide();
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    visibilityObserver?.disconnect();
 });
+
+const handleVisibilityChange = () => {
+    pageVisible.value = document.visibilityState === 'visible';
+    if (pageVisible.value) startAutoSlide();
+    else stopAutoSlide();
+};
 </script>
 
 <template>
@@ -150,6 +176,7 @@ onUnmounted(() => {
         />
 
         <Link
+            ref="imageRoot"
             :href="detailHref"
             class="relative block aspect-[4/3] touch-pan-y overflow-hidden bg-slate-100"
             @click="onImageClick"
@@ -168,6 +195,7 @@ onUnmounted(() => {
                 width="480"
                 height="360"
                 :loading="lazyImage ? 'lazy' : 'eager'"
+                :fetchpriority="lazyImage ? 'auto' : 'high'"
                 decoding="async"
             />
 
