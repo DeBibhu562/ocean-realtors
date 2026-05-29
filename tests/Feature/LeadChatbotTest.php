@@ -63,7 +63,9 @@ it('records quick contact channel on property enquiry', function () {
         'property_id' => $property->id,
         'name' => 'Quick User',
         'phone' => '+919876543211',
-        'message' => 'Quick whatsapp from property page: Test flat',
+        'email' => 'quick@example.com',
+        'is_real_estate_agent' => false,
+        'message' => 'Property contact (WhatsApp): Test flat',
         'contact_channel' => 'whatsapp',
     ]);
 
@@ -73,7 +75,38 @@ it('records quick contact channel on property enquiry', function () {
 
     expect($lead)->not->toBeNull()
         ->and($lead->message)->toContain('Contact preference: WhatsApp')
+        ->and($lead->message)->toContain('Real estate agent: No')
+        ->and($lead->email)->toBe('quick@example.com')
+        ->and($lead->is_real_estate_agent)->toBeFalse()
+        ->and($lead->contact_channel)->toBe('whatsapp')
         ->and($lead->property_id)->toBe($property->id);
+});
+
+it('records view phone channel on property enquiry', function () {
+    $user = User::factory()->create();
+    $agent = Agent::factory()->create(['is_active' => true]);
+    $property = Property::factory()->create([
+        'user_id' => $user->id,
+        'agent_id' => $agent->id,
+        'slug' => 'view-phone-'.uniqid(),
+    ]);
+
+    $response = $this->postJson('/api/leads', [
+        'property_id' => $property->id,
+        'name' => 'View Phone User',
+        'phone' => '+919876543212',
+        'email' => 'view@example.com',
+        'is_real_estate_agent' => true,
+        'contact_channel' => 'view_phone',
+    ]);
+
+    $response->assertOk();
+
+    $lead = Lead::query()->where('name', 'View Phone User')->first();
+
+    expect($lead)->not->toBeNull()
+        ->and($lead->contact_channel)->toBe('view_phone')
+        ->and($lead->is_real_estate_agent)->toBeTrue();
 });
 
 it('rejects reserved slug intent payloads on invalid data', function () {

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Components/AppLayout.vue';
 import PropertyGallery from '@/Components/property/PropertyGallery.vue';
@@ -10,7 +10,7 @@ import SimilarProperties from '@/Components/property/SimilarProperties.vue';
 import QuickContactModal from '@/Components/property/QuickContactModal.vue';
 import PropertyContactBar from '@/Components/property/PropertyContactBar.vue';
 import { usePropertySeo } from '@/Composables/usePropertySeo';
-import { usePropertyContact } from '@/Composables/usePropertyContact';
+import { usePropertyContactLead } from '@/Composables/usePropertyContactLead';
 
 const props = defineProps({
     property: {
@@ -21,16 +21,28 @@ const props = defineProps({
 
 const { pageTitle, description, ogImage, canonical, jsonLd } = usePropertySeo(props.property);
 
-const contactModalOpen = ref(false);
-const contactChannel = ref('whatsapp');
-
 const propertyRef = computed(() => props.property);
 const agentRef = computed(() => props.property.agent);
-const { waLink, callLink } = usePropertyContact(agentRef, propertyRef);
 
-const openContactModal = (channel) => {
-    contactChannel.value = channel;
-    contactModalOpen.value = true;
+const {
+    modalOpen,
+    modalReady,
+    channel,
+    requestContact,
+    closeModal,
+    handleLeadSuccess,
+    waLink,
+    callLink,
+} = usePropertyContactLead(agentRef, propertyRef);
+
+modalReady.value = true;
+
+const openContactModal = (nextChannel) => {
+    requestContact(nextChannel);
+};
+
+const onLeadSuccess = (payload) => {
+    handleLeadSuccess(payload);
 };
 </script>
 
@@ -96,14 +108,16 @@ const openContactModal = (channel) => {
         <PropertyContactBar :agent="property.agent" :property="property" @contact="openContactModal" />
 
         <QuickContactModal
-            :show="contactModalOpen"
-            :channel="contactChannel"
-            :agent-name="property.agent.name"
+            v-if="modalReady"
+            :show="modalOpen"
+            :channel="channel"
+            :agent-name="property.agent?.name || ''"
             :property-id="property.id"
             :property-title="property.title"
             :whatsapp-href="waLink"
             :tel-href="callLink"
-            @close="contactModalOpen = false"
+            @close="closeModal"
+            @success="onLeadSuccess"
         />
     </AppLayout>
 </template>

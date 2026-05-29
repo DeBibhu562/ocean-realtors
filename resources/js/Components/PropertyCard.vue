@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import PropertyCardBrandBar from '@/Components/PropertyCardBrandBar.vue';
 import PropertyListingSpecs from '@/Components/PropertyListingSpecs.vue';
@@ -7,7 +7,11 @@ import PropertyCardContactActions from '@/Components/property/PropertyCardContac
 import { propertyShowPath } from '@/config/listingRouting';
 import { formatIndianPrice } from '@/utils/formatIndianPrice';
 import { buildLocationLabel } from '@/utils/propertyEnquiry';
-import { usePropertyContact } from '@/Composables/usePropertyContact';
+import { usePropertyContactLead } from '@/Composables/usePropertyContactLead';
+
+const QuickContactModal = defineAsyncComponent(
+    () => import('@/Components/property/QuickContactModal.vue'),
+);
 
 const props = defineProps({
     property: { type: Object, required: true },
@@ -43,7 +47,31 @@ const priceLabel = computed(() =>
 
 const agentRef = computed(() => props.property?.agent || null);
 const propertyRef = computed(() => props.property);
-const { phoneDisplay, hasContact } = usePropertyContact(agentRef, propertyRef);
+
+const {
+    modalOpen,
+    modalReady,
+    channel,
+    requestContact,
+    closeModal,
+    handleLeadSuccess,
+    phoneDisplay,
+    hasContact,
+    waLink,
+    callLink,
+} = usePropertyContactLead(agentRef, propertyRef);
+
+const revealPhone = () => {
+    showPhone.value = true;
+};
+
+const onRequestContact = (nextChannel) => {
+    requestContact(nextChannel, { onViewPhone: revealPhone });
+};
+
+const onLeadSuccess = (payload) => {
+    handleLeadSuccess(payload, { onViewPhone: revealPhone });
+};
 
 const cardSizes = '(max-width: 640px) 360px, (max-width: 1024px) 46vw, 378px';
 const galleryImages = computed(() => {
@@ -296,16 +324,29 @@ const handleVisibilityChange = () => {
                 >
                     {{ phoneDisplay }}
                 </p>
-                <PropertyCardContactActions :property="property" />
+                <PropertyCardContactActions :property="property" @request-contact="onRequestContact" />
                 <button
                     type="button"
                     class="inline-flex h-10 items-center justify-center rounded-lg bg-slate-800 px-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
                     :disabled="!hasContact"
-                    @click="showPhone = !showPhone"
+                    @click="onRequestContact('view_phone')"
                 >
                     View number
                 </button>
             </div>
         </div>
+
+        <QuickContactModal
+            v-if="modalReady"
+            :show="modalOpen"
+            :channel="channel"
+            :agent-name="property.agent?.name || ''"
+            :property-id="property.id"
+            :property-title="property.title"
+            :whatsapp-href="waLink"
+            :tel-href="callLink"
+            @close="closeModal"
+            @success="onLeadSuccess"
+        />
     </article>
 </template>
