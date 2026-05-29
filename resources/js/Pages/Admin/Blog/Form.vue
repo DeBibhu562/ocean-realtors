@@ -23,7 +23,6 @@ const form = useForm({
     excerpt: props.post?.excerpt || '',
     content: props.post?.content || '',
     status: props.post?.status || 'draft',
-    published_at: props.post?.published_at || '',
     meta_title: props.post?.meta_title || '',
     meta_description: props.post?.meta_description || '',
     meta_keywords: props.post?.meta_keywords || '',
@@ -85,7 +84,8 @@ const submit = () => {
                     </div>
                     <div>
                         <InputLabel value="Slug" />
-                        <TextInput v-model="form.slug" class="w-full mt-1 font-mono text-sm" placeholder="auto-generated if empty" />
+                        <TextInput v-model="form.slug" class="w-full mt-1 font-mono text-sm" placeholder="best-property-agent-in-gurgaon" />
+                        <p class="text-xs text-gray-400 mt-1">Use letters, numbers, and hyphens only (no leading slash). Auto-generated from the title if empty.</p>
                         <InputError :message="form.errors.slug" />
                     </div>
                     <div>
@@ -149,11 +149,7 @@ const submit = () => {
                             <option value="published">Published</option>
                         </select>
                         <InputError :message="form.errors.status" />
-                    </div>
-                    <div v-if="form.status === 'published'">
-                        <InputLabel value="Publish date" />
-                        <input v-model="form.published_at" type="datetime-local" class="w-full mt-1 rounded-xl border-gray-200 text-sm focus:border-primary focus:ring-primary" />
-                        <InputError :message="form.errors.published_at" />
+                        <p class="text-xs text-gray-400 mt-1">Published posts go live immediately. Drafts stay hidden.</p>
                     </div>
                     <PrimaryButton type="submit" class="w-full justify-center" :disabled="form.processing">
                         {{ isEdit ? 'Update post' : 'Create post' }}

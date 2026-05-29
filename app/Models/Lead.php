@@ -16,9 +16,11 @@ class Lead extends Model
         'name',
         'phone',
         'email',
+        'is_real_estate_agent',
         'message',
         'visit_date',
         'source',
+        'contact_channel',
         'status',
         'ip_address',
     ];
@@ -27,6 +29,7 @@ class Lead extends Model
     {
         return [
             'visit_date' => 'date',
+            'is_real_estate_agent' => 'boolean',
         ];
     }
 

@@ -45,7 +45,7 @@ class SitemapController extends Controller
             ->chunk(100, function ($posts) use ($sitemap, $base) {
                 foreach ($posts as $post) {
                     $sitemap->add(
-                        Url::create("{$base}/blog/{$post->slug}")
+                        Url::create($post->publicUrl())
                             ->setLastModificationDate($post->updated_at)
                             ->setPriority(0.7)
                             ->setChangeFrequency(Url::CHANGE_FREQUENCY_MONTHLY)

@@ -51,7 +51,9 @@ class PublicBlogController extends Controller
 
     public function show(BlogPost $post): Response
     {
-        abort_unless($post->isPublished(), 404);
+        $canPreview = auth()->check() && auth()->user()?->is_admin === true;
+
+        abort_unless($post->isPublished() || $canPreview, 404);
 
         $post->load('blogWriter');
 

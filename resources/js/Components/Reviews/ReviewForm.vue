@@ -8,6 +8,7 @@ const props = defineProps({
     targetId: { type: Number, default: null },
     heading: { type: String, default: 'Write a review' },
     showTitle: { type: Boolean, default: true },
+    compact: { type: Boolean, default: false },
 });
 
 const form = reactive({
@@ -79,8 +80,12 @@ const submit = async () => {
 </script>
 
 <template>
-    <section class="rounded-2xl border border-primary/10 bg-white card-pad shadow-premium" aria-label="Review form">
-        <div v-if="success" class="flex flex-col items-center py-6 md:py-8 text-center">
+    <section
+        class="bg-white"
+        :class="compact ? 'p-0' : 'rounded-2xl border border-primary/10 card-pad shadow-premium'"
+        aria-label="Review form"
+    >
+        <div v-if="success" class="flex flex-col items-center text-center" :class="compact ? 'py-4' : 'py-6 md:py-8'">
             <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -92,10 +97,12 @@ const submit = async () => {
             </p>
         </div>
 
-        <form v-else class="space-y-4" @submit.prevent="submit">
+        <form v-else class="space-y-3" @submit.prevent="submit">
             <div>
-                <h3 class="text-lg font-bold text-primary">{{ heading }}</h3>
-                <p class="mt-1 text-xs text-primary/50">Share your experience. Reviews are moderated before publishing.</p>
+                <h3 class="font-bold text-primary" :class="compact ? 'text-sm' : 'text-lg'">{{ heading }}</h3>
+                <p class="mt-1 text-primary/50" :class="compact ? 'text-[11px] leading-snug' : 'text-xs'">
+                    Share your experience. Reviews are moderated before publishing.
+                </p>
             </div>
 
             <p v-if="errorMessage" class="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{{ errorMessage }}</p>
@@ -151,7 +158,7 @@ const submit = async () => {
                 <textarea
                     id="review-body"
                     v-model="form.body"
-                    rows="4"
+                    :rows="compact ? 3 : 4"
                     maxlength="2000"
                     class="w-full rounded-xl border border-primary/15 px-3 py-2.5 text-sm outline-none ring-accent/30 focus:ring-2"
                 />

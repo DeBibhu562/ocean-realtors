@@ -41,6 +41,23 @@ php artisan boost:install
 
 Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
 
+## PHP version on server (cPanel)
+
+This project requires **PHP 8.3+**. The default `php` CLI on this host is 8.2, so `php artisan …` will fail with a Composer platform error.
+
+Use either:
+
+```bash
+./bin/artisan migrate
+./bin/artisan db:seed --class=Database\\Seeders\\CreateDlfPhase1PropertyAgentBlog --force
+```
+
+or the full cPanel PHP 8.4 path:
+
+```bash
+/opt/cpanel/ea-php84/root/usr/bin/php artisan migrate
+```
+
 ## Property Watermark Backfill
 
 Property uploads are processed through `ImageService` and watermarked at the image center.  
@@ -48,16 +65,16 @@ To backfill older local images that were not normalized, use:
 
 ```bash
 # Dry-run (safe default, no file or DB updates)
-/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks
+./bin/artisan properties:backfill-watermarks
 
 # Commit mode (writes processed images + updates DB paths)
-/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks --commit
+./bin/artisan properties:backfill-watermarks --commit
 ```
 
 Optional:
 
 ```bash
-/opt/cpanel/ea-php84/root/usr/bin/php artisan properties:backfill-watermarks --chunk=200
+./bin/artisan properties:backfill-watermarks --chunk=200
 ```
 
 ## Contributing

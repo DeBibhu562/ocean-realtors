@@ -29,7 +29,8 @@ class LeadController extends Controller
             'intent' => ['nullable', 'string', Rule::in(['rent', 'buy', 'commercial', 'explore'])],
             'city' => 'nullable|string|max:120',
             'source' => ['nullable', 'string', Rule::in(['web', 'mobile', 'chatbot'])],
-            'contact_channel' => ['nullable', 'string', Rule::in(['call', 'whatsapp'])],
+            'contact_channel' => ['nullable', 'string', Rule::in(['call', 'whatsapp', 'view_phone'])],
+            'is_real_estate_agent' => ['nullable', 'boolean'],
         ]);
 
         $property = null;
@@ -51,9 +52,20 @@ class LeadController extends Controller
             $property
         );
 
-        if (! empty($validated['contact_channel'])) {
-            $channelLabel = $validated['contact_channel'] === 'call' ? 'Phone call' : 'WhatsApp';
+        $contactChannel = $validated['contact_channel'] ?? null;
+
+        if ($contactChannel) {
+            $channelLabel = match ($contactChannel) {
+                'call' => 'Phone call',
+                'view_phone' => 'View phone number',
+                default => 'WhatsApp',
+            };
             $message = trim(($message ? $message."\n\n" : '')."Contact preference: {$channelLabel}");
+        }
+
+        if (array_key_exists('is_real_estate_agent', $validated) && $validated['is_real_estate_agent'] !== null) {
+            $agentLabel = $validated['is_real_estate_agent'] ? 'Yes' : 'No';
+            $message = trim(($message ? $message."\n\n" : '')."Real estate agent: {$agentLabel}");
         }
 
         $lead = $this->leadRepository->create([
@@ -62,9 +74,11 @@ class LeadController extends Controller
             'name' => $validated['name'],
             'phone' => $validated['phone'],
             'email' => $validated['email'] ?? '',
+            'is_real_estate_agent' => $validated['is_real_estate_agent'] ?? null,
             'message' => $message,
             'visit_date' => $validated['visit_date'] ?? null,
             'source' => $source,
+            'contact_channel' => $contactChannel,
             'status' => 'new',
             'ip_address' => $request->ip(),
         ]);

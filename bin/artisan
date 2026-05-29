@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Run Laravel artisan with PHP 8.4+ (default `php` on this host is 8.2).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+if [[ -x /opt/cpanel/ea-php84/root/usr/bin/php ]]; then
+    PHP_BIN=/opt/cpanel/ea-php84/root/usr/bin/php
+elif command -v php84 >/dev/null 2>&1; then
+    PHP_BIN=php84
+elif command -v php >/dev/null 2>&1 && php -r 'exit(version_compare(PHP_VERSION, "8.3.0", ">=") ? 0 : 1);'; then
+    PHP_BIN=php
+else
+    echo "Error: PHP 8.3+ is required. On cPanel, run:" >&2
+    echo "  /opt/cpanel/ea-php84/root/usr/bin/php artisan ..." >&2
+    exit 1
+fi
+
+exec "$PHP_BIN" "$ROOT/artisan" "$@"

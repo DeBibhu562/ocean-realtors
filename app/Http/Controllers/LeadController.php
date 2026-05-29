@@ -24,6 +24,8 @@ class LeadController extends Controller
                 'property_slug' => $lead->property?->slug,
                 'agent' => $lead->agent?->name,
                 'source' => $lead->source,
+                'contact_channel' => $lead->contact_channel,
+                'is_real_estate_agent' => $lead->is_real_estate_agent,
                 'status' => ucfirst($lead->status),
                 'message' => $lead->message,
                 'date' => $lead->created_at?->format('M j, Y g:i A'),

@@ -124,10 +124,21 @@ class BlogPostController extends Controller
             $validated['excerpt'] = \Illuminate\Support\Str::limit(strip_tags($validated['content']), 160);
         }
 
+        unset($validated['published_at']);
+
         if ($validated['status'] === BlogPost::STATUS_PUBLISHED) {
-            $validated['published_at'] = $validated['published_at'] ?? $existing?->published_at ?? now();
+            $existingDate = $existing?->published_at;
+            $validated['published_at'] = ($existingDate && $existingDate->lte(now()))
+                ? $existingDate
+                : now();
         } elseif ($validated['status'] === BlogPost::STATUS_DRAFT) {
             $validated['published_at'] = null;
+        }
+
+        if (array_key_exists('slug', $validated)) {
+            $validated['slug'] = filled($validated['slug'])
+                ? BlogPost::normalizeSlug($validated['slug'])
+                : null;
         }
 
         if ($request->hasFile('featured_image')) {
@@ -170,6 +181,7 @@ class BlogPostController extends Controller
             'updated_at' => $post->updated_at?->toIso8601String(),
             'author' => $post->blogWriter?->name ?? '—',
             'is_published' => $post->isPublished(),
+            'public_url' => $post->publicUrl(),
         ];
     }
 

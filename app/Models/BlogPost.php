@@ -46,6 +46,15 @@ class BlogPost extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (BlogPost $post) {
+            if ($post->isDirty('slug') || empty($post->slug)) {
+                $normalized = static::normalizeSlug($post->slug, $post->title);
+                if ($normalized !== '') {
+                    $post->slug = $normalized;
+                }
+            }
+        });
+
         static::creating(function (BlogPost $post) {
             if (empty($post->slug)) {
                 $post->slug = static::uniqueSlug($post->title);
@@ -57,6 +66,15 @@ class BlogPost extends Model
                 $post->slug = static::uniqueSlug($post->title, $post->id);
             }
         });
+    }
+
+    public static function normalizeSlug(?string $slug, ?string $title = null): string
+    {
+        if ($slug !== null && trim($slug) !== '') {
+            return Str::slug(trim($slug, " \t\n\r\0\x0B/"));
+        }
+
+        return $title ? Str::slug($title) : '';
     }
 
     public static function uniqueSlug(string $title, ?int $ignoreId = null): string
@@ -131,8 +149,12 @@ class BlogPost extends Model
     public function isPublished(): bool
     {
         return $this->status === self::STATUS_PUBLISHED
-            && $this->published_at
-            && $this->published_at->lte(now());
+            && $this->published_at !== null;
+    }
+
+    public function publicUrl(): string
+    {
+        return url('/blog/'.ltrim($this->slug, '/'));
     }
 
     public function getExcerptAttribute(?string $value): string
@@ -193,7 +215,7 @@ class BlogPost extends Model
      */
     public function toPublicArray(): array
     {
-        $canonical = $this->canonical_url ?: url('/blog/'.$this->slug);
+        $canonical = $this->canonical_url ?: $this->publicUrl();
 
         return [
             'id' => $this->id,

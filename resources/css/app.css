@@ -91,3 +91,192 @@
     text-shadow: 0 1px 2px rgba(0,0,0,0.1);
   }
 }
+
+/* Rich blog article body (Quill HTML) — explicit styles because typography plugin classes are not in the bundle */
+@layer components {
+  .blog-content {
+    @apply text-text-primary text-base md:text-[1.0625rem] leading-relaxed;
+    word-wrap: break-word;
+  }
+
+  .blog-content > *:first-child {
+    @apply mt-0;
+  }
+
+  .blog-content > *:last-child {
+    @apply mb-0;
+  }
+
+  .blog-content h1 {
+    @apply mt-10 mb-4 text-2xl md:text-3xl font-black text-navy leading-tight;
+  }
+
+  .blog-content h2 {
+    @apply mt-10 mb-4 text-xl md:text-2xl font-bold text-navy leading-snug border-b border-gray-100 pb-2;
+  }
+
+  .blog-content h3 {
+    @apply mt-8 mb-3 text-lg md:text-xl font-bold text-navy leading-snug;
+  }
+
+  .blog-content h4 {
+    @apply mt-6 mb-2 text-base md:text-lg font-bold text-navy;
+  }
+
+  .blog-content p {
+    @apply my-4 text-text-primary/90 leading-[1.75];
+  }
+
+  .blog-content strong,
+  .blog-content b {
+    @apply font-bold text-navy;
+  }
+
+  .blog-content em,
+  .blog-content i {
+    @apply italic;
+  }
+
+  .blog-content a {
+    @apply font-semibold text-primary underline decoration-primary/30 underline-offset-2 hover:text-primary-hover hover:decoration-primary;
+  }
+
+  .blog-content ul {
+    @apply my-5 pl-0 list-none space-y-2;
+  }
+
+  .blog-content ul > li {
+    @apply relative pl-7 text-text-primary/90 leading-relaxed;
+  }
+
+  .blog-content ul > li::before {
+    content: '';
+    @apply absolute left-0 top-[0.55em] h-2 w-2 rounded-full bg-primary;
+  }
+
+  .blog-content ol {
+    @apply my-5 pl-6 list-decimal space-y-2 marker:font-bold marker:text-primary;
+  }
+
+  .blog-content ol > li {
+    @apply pl-1 text-text-primary/90 leading-relaxed;
+  }
+
+  .blog-content ul ul,
+  .blog-content ol ol,
+  .blog-content ul ol,
+  .blog-content ol ul {
+    @apply mt-2 mb-0;
+  }
+
+  .blog-content blockquote {
+    @apply my-8 border-l-4 border-primary bg-primary/5 rounded-r-xl py-4 px-5 text-text-secondary italic;
+  }
+
+  .blog-content img {
+    @apply my-8 w-full rounded-2xl shadow-md;
+  }
+
+  .blog-content hr {
+    @apply my-10 border-gray-200;
+  }
+
+  /* Inline blog CTAs (call + WhatsApp) */
+  .blog-inline-cta {
+    @apply relative overflow-hidden rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 text-white shadow-premium;
+  }
+
+  .blog-inline-cta--navy {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 48%, #1a56db 100%);
+  }
+
+  .blog-inline-cta--primary {
+    background: linear-gradient(135deg, #1a56db 0%, #0e9f6e 55%, #0f172a 100%);
+  }
+
+  .blog-inline-cta__glow {
+    @apply pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-30 blur-3xl;
+    background: radial-gradient(circle, #fff 0%, transparent 70%);
+  }
+
+  .blog-inline-cta__badge {
+    @apply inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider backdrop-blur-sm;
+  }
+
+  .blog-inline-cta__pill {
+    @apply inline-flex items-center rounded-full border border-white/25 px-3 py-1 text-[10px] sm:text-xs font-semibold text-white/90;
+  }
+
+  .blog-inline-cta__title {
+    @apply text-lg sm:text-xl md:text-2xl font-black leading-tight tracking-tight max-w-xl;
+  }
+
+  .blog-inline-cta__subtitle {
+    @apply mt-2 sm:mt-3 text-sm sm:text-base text-white/85 leading-relaxed max-w-lg;
+  }
+
+  .blog-inline-cta__actions {
+    @apply mt-5 sm:mt-6 grid grid-cols-1 gap-3 sm:gap-4;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 480px) {
+    .blog-inline-cta__actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .blog-inline-cta__btn {
+    @apply flex items-center gap-3 rounded-xl sm:rounded-2xl px-4 py-3.5 sm:py-4 transition-all duration-200 min-h-[3.25rem] sm:min-h-[3.5rem];
+    @apply hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent;
+  }
+
+  .blog-inline-cta__btn--call {
+    @apply bg-white text-navy shadow-md hover:shadow-lg;
+  }
+
+  .blog-inline-cta__btn--wa {
+    @apply bg-[#25D366] text-white shadow-md hover:shadow-lg hover:bg-[#20bd5a];
+  }
+
+  .blog-inline-cta__btn-icon {
+    @apply flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy/10 text-navy;
+  }
+
+  .blog-inline-cta__btn-icon--wa {
+    @apply bg-white/20 text-white;
+  }
+
+  .blog-inline-cta__btn-text {
+    @apply flex min-w-0 flex-col text-left;
+  }
+
+  .blog-inline-cta__btn-label {
+    @apply text-[10px] sm:text-xs font-bold uppercase tracking-wide opacity-70;
+  }
+
+  .blog-inline-cta__btn-value {
+    @apply text-sm sm:text-base font-bold leading-tight truncate;
+  }
+
+  .blog-inline-cta__btn--wa .blog-inline-cta__btn-label {
+    @apply text-white/80;
+  }
+
+  .blog-sidebar-sticky {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .blog-sidebar-sticky::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .blog-sidebar-sticky::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-gray-300;
+  }
+
+  .blog-sidebar-sticky::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}

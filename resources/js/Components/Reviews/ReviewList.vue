@@ -13,9 +13,10 @@ const props = defineProps({
     targetId: { type: Number, default: null },
     heading: { type: String, default: 'Reviews' },
     emptyMessage: { type: String, default: 'No reviews yet. Be the first to share your experience.' },
-    /** grid = testimonial cards; list = compact stacked (property/blog) */
+    /** grid = testimonial cards; list = compact stacked; sidebar = narrow column */
     layout: { type: String, default: 'list' },
     showHeading: { type: Boolean, default: true },
+    compact: { type: Boolean, default: false },
 });
 
 const items = ref([...props.reviews]);
@@ -24,6 +25,7 @@ const loading = ref(false);
 const offset = ref(props.reviews.length);
 
 const isGrid = computed(() => props.layout === 'grid');
+const isSidebar = computed(() => props.layout === 'sidebar' || props.compact);
 const hasMore = computed(() => items.value.length < stats.value.total_count);
 
 const loadMore = async () => {
@@ -57,15 +59,18 @@ const parseSubtitle = (title) => {
 </script>
 
 <template>
-    <section class="space-y-5 md:space-y-8" aria-label="Reviews list">
+    <section class="space-y-4" :class="isSidebar ? '' : 'md:space-y-8'" aria-label="Reviews list">
         <!-- Summary strip -->
         <div
             v-if="stats.total_count > 0"
-            class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4 rounded-2xl border border-primary/10 bg-white px-4 py-3 md:px-6 md:py-5 shadow-sm"
-            :class="isGrid ? 'max-w-2xl mx-auto w-full text-center sm:text-left' : ''"
+            class="flex flex-col gap-3 rounded-xl border border-primary/10 bg-white px-3 py-3 shadow-sm"
+            :class="[
+                isGrid ? 'max-w-2xl mx-auto w-full text-center sm:text-left sm:flex-row sm:items-center sm:justify-between md:gap-4 md:px-6 md:py-5 rounded-2xl' : '',
+                isSidebar ? '' : 'sm:flex-row sm:items-center sm:justify-between md:gap-4 md:px-6 md:py-5 rounded-2xl',
+            ]"
         >
             <div v-if="showHeading && !isGrid" class="min-w-0">
-                <h2 class="text-xl font-bold text-navy">{{ heading }}</h2>
+                <h2 class="font-bold text-navy" :class="isSidebar ? 'text-sm' : 'text-xl'">{{ heading }}</h2>
             </div>
             <div
                 class="flex items-center gap-4"
@@ -73,7 +78,8 @@ const parseSubtitle = (title) => {
             >
                 <div class="flex items-center gap-3">
                     <div
-                        class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-xl font-black text-white shadow-md shadow-primary/20"
+                        class="flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-primary/80 font-black text-white shadow-md shadow-primary/20"
+                        :class="isSidebar ? 'h-10 w-10 text-base rounded-lg' : 'h-14 w-14 text-xl rounded-2xl'"
                     >
                         {{ stats.average_rating }}
                     </div>
@@ -97,11 +103,12 @@ const parseSubtitle = (title) => {
             </div>
         </div>
 
-        <h2 v-else-if="showHeading && !isGrid" class="text-xl font-bold text-navy">{{ heading }}</h2>
+        <h2 v-else-if="showHeading && !isGrid" class="font-bold text-navy" :class="isSidebar ? 'text-sm' : 'text-xl'">{{ heading }}</h2>
 
         <p
             v-if="items.length === 0"
-            class="rounded-2xl border border-dashed border-gray-200 bg-white px-4 py-8 md:px-6 md:py-12 text-center text-sm text-text-muted"
+            class="rounded-xl border border-dashed border-gray-200 bg-white text-center text-text-muted"
+            :class="isSidebar ? 'px-3 py-6 text-xs' : 'rounded-2xl px-4 py-8 md:px-6 md:py-12 text-sm'"
         >
             {{ emptyMessage }}
         </p>
@@ -150,15 +157,17 @@ const parseSubtitle = (title) => {
         </div>
 
         <!-- List layout (property / blog) -->
-        <div v-else class="space-y-4">
+        <div v-else class="space-y-3">
             <article
                 v-for="review in items"
                 :key="review.id"
-                class="rounded-2xl border border-gray-100 bg-white card-pad shadow-sm"
+                class="rounded-xl border border-gray-100 bg-white shadow-sm"
+                :class="isSidebar ? 'p-3' : 'rounded-2xl card-pad'"
             >
-                <div class="flex gap-4">
+                <div class="flex gap-3">
                     <div
-                        class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 text-sm font-bold text-primary"
+                        class="flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 font-bold text-primary"
+                        :class="isSidebar ? 'h-9 w-9 text-xs' : 'h-11 w-11 text-sm'"
                     >
                         {{ review.initials }}
                     </div>
@@ -173,7 +182,10 @@ const parseSubtitle = (title) => {
                                 · {{ parseSubtitle(review.title).city }}
                             </template>
                         </p>
-                        <blockquote class="mt-3 text-sm text-text-primary/85 leading-relaxed">
+                        <blockquote
+                            class="mt-2 text-text-primary/85 leading-relaxed"
+                            :class="isSidebar ? 'text-xs line-clamp-4' : 'mt-3 text-sm'"
+                        >
                             “{{ review.body }}”
                         </blockquote>
                     </div>
@@ -184,7 +196,7 @@ const parseSubtitle = (title) => {
         <div v-if="hasMore && targetType" class="text-center pt-2">
             <button
                 type="button"
-                class="inline-flex items-center justify-center rounded-xl bg-white border border-primary/20 px-8 py-2.5 text-sm font-semibold text-primary shadow-sm hover:bg-primary/5 hover:border-primary/30 disabled:opacity-60 transition-colors"
+                class="inline-flex w-full items-center justify-center rounded-xl bg-white border border-primary/20 px-4 py-2 text-xs font-semibold text-primary shadow-sm hover:bg-primary/5 hover:border-primary/30 disabled:opacity-60 transition-colors sm:text-sm sm:px-8 sm:py-2.5"
                 :disabled="loading"
                 @click="loadMore"
             >

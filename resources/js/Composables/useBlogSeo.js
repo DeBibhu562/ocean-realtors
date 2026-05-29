@@ -20,7 +20,14 @@ export function useBlogSeo(post) {
         return `${window.location.origin}${img.startsWith('/') ? img : '/'+img}`;
     });
 
-    const canonical = computed(() => seo.value.canonical || `${window.location.origin}/blog/${post?.slug}`);
+    const canonical = computed(() => {
+        if (seo.value.canonical) {
+            return seo.value.canonical;
+        }
+        const slug = (post?.slug || '').replace(/^\/+/, '');
+
+        return `${window.location.origin}/blog/${slug}`;
+    });
 
     const robots = computed(() => (seo.value.noindex ? 'noindex, nofollow' : 'index, follow'));
 

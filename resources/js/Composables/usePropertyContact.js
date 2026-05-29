@@ -81,6 +81,7 @@ export function usePropertyContact(agentRef, propertyRef) {
         whatsappMessage,
         listingUrl,
         hasContact,
+        hasSavedContact,
         openChannel,
     };
 }

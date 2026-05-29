@@ -57,5 +57,41 @@ onMounted(() => {
 }
 .rich-text-editor .ql-editor {
     min-height: 280px;
+    color: #111827;
+}
+
+.rich-text-editor .ql-editor h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 1rem 0 0.5rem;
+}
+
+.rich-text-editor .ql-editor h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 1rem 0 0.5rem;
+}
+
+.rich-text-editor .ql-editor h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.rich-text-editor .ql-editor p {
+    margin: 0.5rem 0;
+    line-height: 1.65;
+}
+
+.rich-text-editor .ql-editor ul,
+.rich-text-editor .ql-editor ol {
+    padding-left: 1.25rem;
+    margin: 0.5rem 0;
+}
+
+.rich-text-editor .ql-editor li {
+    margin: 0.25rem 0;
 }
 </style>

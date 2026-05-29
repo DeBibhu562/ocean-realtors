@@ -8,6 +8,13 @@ use Illuminate\Validation\Rule;
 
 class UpdateBlogPostRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('slug')) {
+            $this->merge(['slug' => BlogPost::normalizeSlug($this->input('slug'))]);
+        }
+    }
+
     public function authorize(): bool
     {
         return $this->user()?->is_admin === true;
@@ -22,7 +29,7 @@ class UpdateBlogPostRequest extends FormRequest
 
         return [
             'title' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('blog_posts', 'slug')->ignore($postId)],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('blog_posts', 'slug')->ignore($postId)],
             'excerpt' => ['nullable', 'string', 'max:500'],
             'content' => ['required', 'string'],
             'status' => ['required', Rule::in([BlogPost::STATUS_DRAFT, BlogPost::STATUS_PUBLISHED])],

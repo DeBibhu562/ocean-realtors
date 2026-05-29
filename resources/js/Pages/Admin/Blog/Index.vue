@@ -90,14 +90,16 @@ const formatDate = (iso) => {
                                     />
                                     <div class="min-w-0">
                                         <p class="font-bold text-gray-900 truncate max-w-xs">{{ post.title }}</p>
-                                        <p class="text-xs text-gray-400">/{{ post.slug }}</p>
+                                        <p class="text-xs text-gray-400">/blog/{{ post.slug }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <span
                                     class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold uppercase"
-                                    :class="post.status === 'published' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'"
+                                    :class="post.status === 'published'
+                                        ? 'bg-emerald-100 text-emerald-700'
+                                        : 'bg-amber-100 text-amber-700'"
                                 >
                                     {{ post.status }}
                                 </span>
@@ -106,8 +108,8 @@ const formatDate = (iso) => {
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2 flex-wrap">
                                     <a
-                                        v-if="post.is_published"
-                                        :href="route('blog.show', post.slug)"
+                                        v-if="post.status === 'published'"
+                                        :href="post.public_url"
                                         target="_blank"
                                         class="text-xs font-semibold text-primary hover:underline"
                                     >

@@ -39,6 +39,11 @@ Route::get('/agents', [PublicAgentController::class, 'index'])->name('agents.ind
 Route::get('/agents/{agent}', [PublicAgentController::class, 'show'])->name('agents.show');
 
 Route::get('/blog', [PublicBlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', function (string $slug) {
+    $clean = trim($slug, '/');
+
+    return redirect()->route('blog.show', $clean, 301);
+})->where('slug', '^(?:/|//).+');
 Route::get('/blog/{post:slug}', [PublicBlogController::class, 'show'])->name('blog.show');
 
 Route::get('/mission', function () { return Inertia::render('Mission'); });
