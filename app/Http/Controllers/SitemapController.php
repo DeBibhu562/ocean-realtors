@@ -38,6 +38,17 @@ class SitemapController extends Controller
             $sitemap->add($url);
         }
 
+        foreach (SeoLandingController::sitemapEntries() as $page) {
+            $url = Url::create($base.$page['path'])
+                ->setPriority($page['priority'] ?? 0.85);
+
+            if (! empty($page['changefreq'])) {
+                $url->setChangeFrequency($page['changefreq']);
+            }
+
+            $sitemap->add($url);
+        }
+
         BlogPost::query()
             ->published()
             ->select(['slug', 'updated_at'])

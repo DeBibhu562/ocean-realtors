@@ -10,6 +10,7 @@ import TextInput from '@/Components/TextInput.vue';
 import InputError from '@/Components/InputError.vue';
 const ListingLocationMap = defineAsyncComponent(() => import('@/Components/Listing/ListingLocationMap.vue'));
 import { useListingLocationOptions } from '@/Composables/useListingLocationOptions';
+import { useAreaUnitConverter } from '@/Composables/useAreaUnitConverter';
 
 const props = defineProps({
     properties: {
@@ -103,8 +104,8 @@ const openCreateModal = async () => {
     photoPreviews.value = [];
     form.reset();
     form.city = 'Gurgaon';
-    setBuiltUpFromSqFt('');
-    setCarpetFromSqFt('');
+    clearBuiltUpArea();
+    clearCarpetArea();
     await initLocationStep();
     showingPropertyModal.value = true;
 };
@@ -157,64 +158,32 @@ const isPg = computed(() => form.listing_type === 'PG');
 const showPgFields = computed(() => isPg.value || isRent.value);
 const cityOptionName = (city) => (typeof city === 'string' ? city : city?.name ?? '');
 
-const toSqM = (sqFt) => sqFt / 10.7639;
-const toSqYd = (sqFt) => sqFt / 9;
-const toSqFtFromSqM = (sqM) => sqM * 10.7639;
-const toSqFtFromSqYd = (sqYd) => sqYd * 9;
-const roundArea = (value) => {
-    const n = Number(value);
-    if (!Number.isFinite(n) || n <= 0) return '';
-    return (Math.round(n * 100) / 100).toString();
-};
+const {
+    sqFt: builtUpSqFt,
+    sqM: builtUpSqM,
+    sqYd: builtUpSqYd,
+    setFromSqFt: setBuiltUpFromSqFt,
+    clearAll: clearBuiltUpArea,
+    normalizeSqFt: normalizeBuiltUpSqFt,
+    normalizeSqM: normalizeBuiltUpSqM,
+    normalizeSqYd: normalizeBuiltUpSqYd,
+} = useAreaUnitConverter((value) => {
+    form.built_up_area = value;
+});
 
-const builtUpSqFt = ref('');
-const builtUpSqM = ref('');
-const builtUpSqYd = ref('');
-const carpetSqFt = ref('');
-const carpetSqM = ref('');
-const carpetSqYd = ref('');
-let syncingAreaUnits = false;
+const {
+    sqFt: carpetSqFt,
+    sqM: carpetSqM,
+    sqYd: carpetSqYd,
+    setFromSqFt: setCarpetFromSqFt,
+    clearAll: clearCarpetArea,
+    normalizeSqFt: normalizeCarpetSqFt,
+    normalizeSqM: normalizeCarpetSqM,
+    normalizeSqYd: normalizeCarpetSqYd,
+} = useAreaUnitConverter((value) => {
+    form.carpet_area = value;
+});
 
-const setBuiltUpFromSqFt = (sqFt) => {
-    syncingAreaUnits = true;
-    const ft = Number(sqFt);
-    if (!Number.isFinite(ft) || ft <= 0) {
-        builtUpSqFt.value = '';
-        builtUpSqM.value = '';
-        builtUpSqYd.value = '';
-        form.built_up_area = '';
-    } else {
-        builtUpSqFt.value = roundArea(ft);
-        builtUpSqM.value = roundArea(toSqM(ft));
-        builtUpSqYd.value = roundArea(toSqYd(ft));
-        form.built_up_area = roundArea(ft);
-    }
-    syncingAreaUnits = false;
-};
-
-const setCarpetFromSqFt = (sqFt) => {
-    syncingAreaUnits = true;
-    const ft = Number(sqFt);
-    if (!Number.isFinite(ft) || ft <= 0) {
-        carpetSqFt.value = '';
-        carpetSqM.value = '';
-        carpetSqYd.value = '';
-        form.carpet_area = '';
-    } else {
-        carpetSqFt.value = roundArea(ft);
-        carpetSqM.value = roundArea(toSqM(ft));
-        carpetSqYd.value = roundArea(toSqYd(ft));
-        form.carpet_area = roundArea(ft);
-    }
-    syncingAreaUnits = false;
-};
-
-watch(builtUpSqFt, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(val); });
-watch(builtUpSqM, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(toSqFtFromSqM(Number(val))); });
-watch(builtUpSqYd, (val) => { if (!syncingAreaUnits) setBuiltUpFromSqFt(toSqFtFromSqYd(Number(val))); });
-watch(carpetSqFt, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(val); });
-watch(carpetSqM, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(toSqFtFromSqM(Number(val))); });
-watch(carpetSqYd, (val) => { if (!syncingAreaUnits) setCarpetFromSqFt(toSqFtFromSqYd(Number(val))); });
 watch(
     () => form.listing_type,
     (listingType) => {
@@ -223,15 +192,44 @@ watch(
     { immediate: true }
 );
 
+const submitError = ref('');
+
+const coerceNonNegativeIntString = (value) => {
+    const parsed = parseInt(String(value ?? ''), 10);
+    if (Number.isNaN(parsed)) {
+        return '0';
+    }
+
+    return String(Math.max(0, parsed));
+};
+
+const normalizeNumericFields = () => {
+    form.bedrooms = parseInt(form.bhk.split(' ')[0], 10) || 0;
+    form.size = parseInt(form.built_up_area, 10) || 0;
+    form.covered_parking = coerceNonNegativeIntString(form.covered_parking);
+    form.open_parking = coerceNonNegativeIntString(form.open_parking);
+
+    if (form.floor_no !== '' && form.floor_no !== null && form.floor_no !== undefined) {
+        form.floor_no = Math.max(0, parseInt(form.floor_no, 10) || 0);
+    }
+
+    if (form.total_floors !== '' && form.total_floors !== null && form.total_floors !== undefined) {
+        form.total_floors = Math.max(0, parseInt(form.total_floors, 10) || 0);
+    }
+};
+
 const normalizePricingByIntent = () => {
     if (isSell.value) {
         form.security_deposit = '';
         form.lock_in_period = '';
         form.pg_food_included = false;
         form.food_charges = '';
-        form.maintenance_type = '';
+        form.maintenance_type = 'N/A';
     } else {
         form.booking_amount = '';
+        if (form.maintenance_type === 'N/A') {
+            form.maintenance_type = 'Separate';
+        }
     }
 
     if (!showPgFields.value) {
@@ -240,34 +238,45 @@ const normalizePricingByIntent = () => {
     }
 };
 
+const firstFormError = (errors) => {
+    const values = Object.values(errors || {});
+    const first = values[0];
+
+    return Array.isArray(first) ? first[0] : first || 'Could not save listing. Please review your details and try again.';
+};
+
+const handleSubmitError = (errors) => {
+    submitError.value = firstFormError(errors);
+    currentStep.value = totalSteps;
+};
+
+const submitOptions = {
+    forceFormData: true,
+    onSuccess: () => closeModal(),
+    onError: handleSubmitError,
+};
+
 const submit = () => {
-    // Ensure numbers are numbers
-    form.bedrooms = parseInt(form.bhk.split(' ')[0]) || 0;
-    form.garage = parseInt(form.covered_parking) || 0;
-    form.size = parseInt(form.built_up_area) || 0;
+    submitError.value = '';
+    normalizeNumericFields();
     normalizePricingByIntent();
 
     if (editingProperty.value) {
         form._method = 'PUT';
-        form.post(route('properties.update', editingProperty.value.id), {
-            forceFormData: true,
-            onSuccess: () => closeModal(),
-        });
+        form.post(route('properties.update', editingProperty.value.id), submitOptions);
     } else {
         form._method = null;
-        form.post(route('properties.store'), {
-            forceFormData: true,
-            onSuccess: () => closeModal(),
-        });
+        form.post(route('properties.store'), submitOptions);
     }
 };
 
 const closeModal = () => {
     showingPropertyModal.value = false;
+    submitError.value = '';
     form.reset();
     photoPreviews.value = [];
-    setBuiltUpFromSqFt('');
-    setCarpetFromSqFt('');
+    clearBuiltUpArea();
+    clearCarpetArea();
 };
 
 const watermarkForm = useForm({ watermark: null });
@@ -513,6 +522,13 @@ const goPrevStep = () => {
                 </div>
 
                 <form @submit.prevent="submit" class="space-y-8">
+                    <div
+                        v-if="submitError"
+                        class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800"
+                        role="alert"
+                    >
+                        {{ submitError }}
+                    </div>
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
                         <aside class="rounded-2xl border border-gray-200 bg-gray-50 p-4">
                             <p class="mb-3 text-xs font-black uppercase tracking-wider text-gray-500">Listing Progress</p>
@@ -664,17 +680,17 @@ const goPrevStep = () => {
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <InputLabel value="Built Up Area Converter" />
                                 <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="number" v-model="builtUpSqFt" class="w-full" /></div>
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="number" v-model="builtUpSqM" class="w-full" /></div>
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="number" v-model="builtUpSqYd" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="builtUpSqFt" class="w-full" placeholder="e.g. 2259" @blur="normalizeBuiltUpSqFt" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="builtUpSqM" class="w-full" placeholder="e.g. 210" @blur="normalizeBuiltUpSqM" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="builtUpSqYd" class="w-full" placeholder="e.g. 251" @blur="normalizeBuiltUpSqYd" /></div>
                                 </div>
                             </div>
                             <div class="rounded-xl border border-gray-200 p-4">
                                 <InputLabel value="Carpet Area Converter" />
                                 <div class="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="number" v-model="carpetSqFt" class="w-full" /></div>
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="number" v-model="carpetSqM" class="w-full" /></div>
-                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="number" v-model="carpetSqYd" class="w-full" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.ft</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="carpetSqFt" class="w-full" placeholder="e.g. 1800" @blur="normalizeCarpetSqFt" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.m</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="carpetSqM" class="w-full" placeholder="e.g. 167" @blur="normalizeCarpetSqM" /></div>
+                                    <div><label class="text-xs font-semibold text-gray-500">sq.yd</label><TextInput type="text" inputmode="numeric" pattern="[0-9]*" v-model="carpetSqYd" class="w-full" placeholder="e.g. 200" @blur="normalizeCarpetSqYd" /></div>
                                 </div>
                             </div>
                         </div>

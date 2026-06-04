@@ -1,29 +1,46 @@
 <x-mail::message>
-# New enquiry received
+# New enquiry — {{ config('app.name') }}
 
-**Source:** {{ ucfirst($lead->source ?? 'web') }}
+A lead was submitted on **{{ config('app.url') }}** and is saved in your dashboard.
 
-**Property:** {{ $lead->property?->title ?? 'General enquiry (no specific listing)' }}
+<x-mail::button :url="$dashboardUrl">
+Open leads dashboard
+</x-mail::button>
 
-**From:** {{ $lead->name }}
+---
+
+**Name:** {{ $lead->name }}
+
+**Phone:** {{ $lead->phone }}
 
 @if($lead->email)
 **Email:** {{ $lead->email }}
 @endif
 
-**Phone:** {{ $lead->phone }}
+**Source:** {{ ucfirst($lead->source ?? 'web') }}
+
+@if($lead->contact_channel)
+**Contact preference:** @switch($lead->contact_channel)
+@case('call') Phone call @break
+@case('view_phone') View phone number @break
+@case('whatsapp') WhatsApp @break
+@default {{ $lead->contact_channel }}
+@endswitch
+@endif
+
+**Property:** {{ $lead->property?->title ?? 'No specific listing (general / landing page)' }}
 
 @if($lead->visit_date)
-**Preferred visit:** {{ $lead->visit_date->format('M j, Y') }}
+**Preferred visit:** {{ $lead->visit_date->format('l, M j, Y') }}
 @endif
 
 **Message**
 
 {{ $lead->message ?: '—' }}
 
-<x-mail::button :url="$lead->property ? url('/'.$lead->property->slug) : url('/properties')">
-View listing
-</x-mail::button>
+@if($lead->email)
+Reply to this email to reach the enquirer at **{{ $lead->email }}**.
+@endif
 
 Thanks,<br>
 {{ config('app.name') }}

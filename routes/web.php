@@ -12,6 +12,7 @@ use App\Http\Controllers\Dashboard\GeocodeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\SeoLandingController;
 use App\Http\Controllers\PublicAgentController;
 use App\Http\Controllers\PublicBlogController;
 use App\Http\Controllers\SystemSettingController;
@@ -128,16 +129,27 @@ Route::middleware('auth')->group(function () {
 
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index']);
 
+$seoLandingSlugs = array_keys(config('seo_landing_pages.pages', []));
+if ($seoLandingSlugs !== []) {
+    $seoSlugPattern = implode('|', array_map(static fn (string $s): string => preg_quote($s, '#'), $seoLandingSlugs));
+    Route::get('/{seoSlug}', [SeoLandingController::class, 'show'])
+        ->where('seoSlug', $seoSlugPattern)
+        ->name('seo-landing.show');
+}
+
 require __DIR__.'/auth.php';
 
 // Legacy public URLs used slug at site root (e.g. /3-bhk-apartment-in-gurgaon-6).
 // Must remain last so it does not shadow /login, /register, etc.
 Route::get('/{propertySlug}', function (string $propertySlug) {
-    $reserved = [
-        'login', 'register', 'logout', 'dashboard', 'admin', 'api',
-        'profile', 'leads', 'settings', 'forgot-password', 'reset-password',
-        'verify-email', 'confirm-password',
-    ];
+    $reserved = array_merge(
+        [
+            'login', 'register', 'logout', 'dashboard', 'admin', 'api',
+            'profile', 'leads', 'settings', 'forgot-password', 'reset-password',
+            'verify-email', 'confirm-password',
+        ],
+        array_keys(config('seo_landing_pages.pages', [])),
+    );
 
     if (in_array($propertySlug, $reserved, true)) {
         abort(404);

@@ -28,10 +28,29 @@ export default defineConfig({
                 skipWaiting: true,
                 runtimeCaching: [
                     {
-                        urlPattern: ({ request }) => request.destination === 'script' || request.destination === 'style' || request.destination === 'worker',
+                        urlPattern: ({ url, request }) =>
+                            request.method === 'GET' &&
+                            url.pathname.startsWith('/build/assets/'),
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'vite-build-assets-v3',
+                            networkTimeoutSeconds: 5,
+                            cacheableResponse: { statuses: [0, 200] },
+                            expiration: {
+                                maxEntries: 200,
+                                maxAgeSeconds: 60 * 60 * 24 * 7,
+                            },
+                        },
+                    },
+                    {
+                        urlPattern: ({ request, url }) =>
+                            (request.destination === 'script' ||
+                                request.destination === 'style' ||
+                                request.destination === 'worker') &&
+                            !url.pathname.startsWith('/build/assets/'),
                         handler: 'StaleWhileRevalidate',
                         options: {
-                            cacheName: 'static-assets-v2',
+                            cacheName: 'static-assets-v3',
                             expiration: {
                                 maxEntries: 120,
                                 maxAgeSeconds: 60 * 60 * 24 * 14,

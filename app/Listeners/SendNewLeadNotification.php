@@ -4,6 +4,7 @@ namespace App\Listeners;
 
 use App\Events\LeadCreated;
 use App\Mail\NewLeadMail;
+use App\Support\LeadNotificationRecipients;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -11,24 +12,23 @@ class SendNewLeadNotification
 {
     public function handle(LeadCreated $event): void
     {
-        $lead = $event->lead->loadMissing(['property.agent', 'property.user', 'agent']);
+        $lead = $event->lead->loadMissing(['property', 'agent']);
+        $recipients = LeadNotificationRecipients::for($lead);
 
-        $agentEmail = $lead->property?->agent?->email
-            ?? $lead->agent?->email
-            ?? $lead->property?->user?->email;
-
-        $recipient = $agentEmail ?: config('mail.from.address');
-
-        if (! $recipient) {
-            Log::warning('Lead created but no notification email available', ['lead_id' => $lead->id]);
+        if ($recipients === []) {
+            Log::warning('Lead created but no notification recipients configured', ['lead_id' => $lead->id]);
 
             return;
         }
 
         try {
-            Mail::to($recipient)->send(new NewLeadMail($lead));
+            Mail::to($recipients)->send(new NewLeadMail($lead));
+            Log::info('Lead notification email sent', ['lead_id' => $lead->id, 'recipients' => $recipients]);
         } catch (\Throwable $e) {
-            Log::error('Failed to send lead notification email: '.$e->getMessage(), ['lead_id' => $lead->id]);
+            Log::error('Failed to send lead notification email: '.$e->getMessage(), [
+                'lead_id' => $lead->id,
+                'recipients' => $recipients,
+            ]);
         }
     }
 }

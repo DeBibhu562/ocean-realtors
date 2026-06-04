@@ -263,7 +263,7 @@ class PropertyController extends Controller
     protected function finalizeComputedSeoPayload(Property $property, array $payload): array
     {
         $computed = PropertyPayloadNormalizer::applyComputedTitleAndSeo($payload, $property->id);
-        $computed['slug'] = Property::uniqueSlug((string) $computed['title'], $property->id);
+        $computed['slug'] = PropertyPayloadNormalizer::buildListingSlug($payload, $property->id);
 
         return $computed;
     }
@@ -377,8 +377,8 @@ class PropertyController extends Controller
             'balconies' => ['nullable', 'integer'],
             'furnish_type' => ['nullable', 'string'],
             'amenities' => ['nullable', 'array'],
-            'covered_parking' => ['nullable', 'string'],
-            'open_parking' => ['nullable', 'string'],
+            'covered_parking' => ['nullable', 'string', 'regex:/^\d*$/'],
+            'open_parking' => ['nullable', 'string', 'regex:/^\d*$/'],
             'tenant_type' => ['nullable', 'string'],
             'bachelor_preference' => ['nullable', 'string'],
             'pet_friendly' => ['sometimes', 'boolean'],
@@ -386,7 +386,7 @@ class PropertyController extends Controller
             'pg_food_included' => ['sometimes', 'boolean'],
             'available_from' => ['nullable', 'date'],
             'maintenance_charges' => ['nullable', 'numeric'],
-            'maintenance_type' => ['nullable', 'string'],
+            'maintenance_type' => ['nullable', 'string', 'max:32'],
             'security_deposit' => ['nullable', 'string'],
             'lock_in_period' => ['nullable', 'string'],
             'booking_amount' => ['nullable', 'numeric', 'min:0'],
@@ -395,8 +395,8 @@ class PropertyController extends Controller
             'brokerage_negotiable' => ['sometimes', 'boolean'],
             'parking_charges_type' => ['nullable', 'string'],
             'painting_charges' => ['nullable', 'string'],
-            'floor_no' => ['nullable', 'integer'],
-            'total_floors' => ['nullable', 'integer'],
+            'floor_no' => ['nullable', 'integer', 'min:0'],
+            'total_floors' => ['nullable', 'integer', 'min:0'],
             'facing' => ['nullable', 'string'],
             'servant_room' => ['sometimes', 'boolean'],
             'rera_id' => ['nullable', 'string'],
