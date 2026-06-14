@@ -137,6 +137,20 @@ class Agent extends Model
         ];
     }
 
+    /**
+     * Public profile payload without contact numbers (lead-gated on agent show page).
+     *
+     * @return array<string, mixed>
+     */
+    public function toPublicProfileArray(): array
+    {
+        $data = $this->toPublicArray();
+        unset($data['phone'], $data['whatsapp_phone']);
+        $data['has_contact'] = filled($this->phone) || filled($this->whatsapp_phone);
+
+        return $data;
+    }
+
     public function defaultAvatarUrl(): string
     {
         return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=1a56db&color=fff&size=160';

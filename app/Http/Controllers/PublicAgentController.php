@@ -55,7 +55,7 @@ class PublicAgentController extends Controller
             ->map(fn ($property) => $this->propertyRepository->toCard($property));
 
         return Inertia::render('Agents/Show', [
-            'agent' => $agent->toPublicArray(),
+            'agent' => $agent->toPublicProfileArray(),
             'properties' => $properties,
         ]);
     }

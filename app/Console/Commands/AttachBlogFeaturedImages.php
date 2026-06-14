@@ -4,6 +4,8 @@ namespace App\Console\Commands;
 
 use App\Models\BlogPost;
 use App\Services\ImageService;
+use App\Support\GurgaonBlogContentBuilder;
+use Database\Seeders\CreateGurgaonPropertyGuideBlogs;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 
@@ -55,11 +57,14 @@ class AttachBlogFeaturedImages extends Command
         'best-property-agent-in-greenwood-city' => 'https://images.unsplash.com/photo-1600585154363-67eb9e2e2099?auto=format&fit=crop&w=1200&q=80',
         'best-property-agent-in-ardee-city' => 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=80',
         'best-property-agent-in-sun-city' => 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',
+        'best-places-to-live-in-gurgaon' => 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
     ];
 
     public function handle(ImageService $imageService): int
     {
-        foreach ($this->slugImages as $slug => $url) {
+        $slugImages = array_merge($this->slugImages, $this->batchGuideImages());
+
+        foreach ($slugImages as $slug => $url) {
             $post = BlogPost::where('slug', $slug)->first();
 
             if (! $post) {
@@ -95,5 +100,19 @@ class AttachBlogFeaturedImages extends Command
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function batchGuideImages(): array
+    {
+        $images = [];
+
+        foreach (GurgaonBlogContentBuilder::allDefinitions() as $definition) {
+            $images[$definition['slug']] = CreateGurgaonPropertyGuideBlogs::imageForSlug($definition['slug']);
+        }
+
+        return $images;
     }
 }

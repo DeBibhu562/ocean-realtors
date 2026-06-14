@@ -9,7 +9,20 @@ const props = defineProps({
     areaName: { type: String, required: true },
     intent: { type: String, default: 'buy' },
     city: { type: String, default: 'Gurgaon' },
+    listingType: { type: String, default: 'builder_floor' },
 });
+
+const formSubtitle = computed(() => props.listingType === 'plot'
+    ? `${props.areaName} · Curated plot shortlist`
+    : props.listingType === '4bhk_builder_floor'
+        ? `${props.areaName} · Curated 4 BHK shortlist`
+        : `${props.areaName} · Curated 3 BHK shortlist`);
+
+const submitLabel = computed(() => props.listingType === 'plot'
+    ? 'Get plot shortlist'
+    : props.listingType === '4bhk_builder_floor'
+        ? 'Get 4 BHK shortlist'
+        : 'Get shortlist');
 
 const defaultMessage = computed(() => `Interested in: ${props.pageTitle}. Please share options and schedule a visit.`);
 
@@ -95,7 +108,7 @@ const submit = async () => {
         <form v-else class="space-y-2.5" @submit.prevent="submit">
             <header class="text-center border-b border-gray-100 pb-2.5 mb-0.5">
                 <h2 class="text-[13px] sm:text-sm font-bold text-navy leading-tight tracking-tight whitespace-nowrap">Enquire with Ocean Realtors</h2>
-                <p class="mt-1 text-[10px] sm:text-[11px] text-text-secondary leading-snug">{{ areaName }} · Curated 3 BHK shortlist</p>
+                <p class="mt-1 text-[10px] sm:text-[11px] text-text-secondary leading-snug">{{ formSubtitle }}</p>
             </header>
             <div>
                 <label for="seo-lead-name" class="mb-0.5 block text-[10px] font-semibold uppercase tracking-wide text-navy/55">Name *</label>
@@ -134,7 +147,7 @@ const submit = async () => {
             <p v-if="errors.agree" class="text-center text-[11px] font-medium text-red-600">{{ errors.agree }}</p>
             <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-xs font-bold text-white transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60" :disabled="submitting">
                 <svg v-if="submitting" class="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" /><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" /></svg>
-                {{ submitting ? 'Sending...' : 'Get shortlist' }}
+                {{ submitting ? 'Sending...' : submitLabel }}
             </button>
         </form>
     </section>

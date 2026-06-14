@@ -6,7 +6,8 @@ const props = defineProps({
     show: { type: Boolean, default: false },
     channel: { type: String, default: 'whatsapp' },
     agentName: { type: String, default: '' },
-    propertyId: { type: Number, required: true },
+    propertyId: { type: Number, default: null },
+    agentId: { type: Number, default: null },
     propertyTitle: { type: String, default: '' },
     whatsappHref: { type: String, default: '#' },
     telHref: { type: String, default: '#' },
@@ -37,12 +38,42 @@ const dialOptions = ['+91', '+1', '+44', '+971'];
 
 const fullPhone = computed(() => `${form.dialCode}${form.phoneLocal.replace(/\D/g, '')}`);
 
+const isAgentProfile = computed(() => !!props.agentId && !props.propertyId);
+
 const channelMeta = computed(() => {
+    const name = props.agentName || 'the agent';
+
+    if (isAgentProfile.value) {
+        switch (props.channel) {
+            case 'call':
+                return {
+                    title: 'Call agent',
+                    subtitle: `Share your details to call ${name}.`,
+                    cta: 'Continue to call',
+                    accent: 'bg-primary hover:bg-primary-hover',
+                };
+            case 'view_phone':
+                return {
+                    title: 'View phone number',
+                    subtitle: `Enter your details to see ${name}'s contact number.`,
+                    cta: 'View number',
+                    accent: 'bg-slate-800 hover:bg-slate-900',
+                };
+            default:
+                return {
+                    title: 'WhatsApp agent',
+                    subtitle: `Share your details to message ${name} on WhatsApp.`,
+                    cta: 'Continue to WhatsApp',
+                    accent: 'bg-emerald-500 hover:bg-emerald-600',
+                };
+        }
+    }
+
     switch (props.channel) {
         case 'call':
             return {
                 title: 'Call agent',
-                subtitle: `Share your details to call ${props.agentName || 'the agent'} about this listing.`,
+                subtitle: `Share your details to call ${name} about this listing.`,
                 cta: 'Continue to call',
                 accent: 'bg-primary hover:bg-primary-hover',
             };
@@ -56,11 +87,27 @@ const channelMeta = computed(() => {
         default:
             return {
                 title: 'WhatsApp agent',
-                subtitle: `Share your details to message ${props.agentName || 'the agent'} on WhatsApp with this listing.`,
+                subtitle: `Share your details to message ${name} on WhatsApp with this listing.`,
                 cta: 'Continue to WhatsApp',
                 accent: 'bg-emerald-500 hover:bg-emerald-600',
             };
     }
+});
+
+const disclaimerText = computed(() =>
+    isAgentProfile.value
+        ? 'By continuing, you agree we may contact you about your enquiry. Your details are shared with this agent.'
+        : 'By continuing, you agree we may contact you about this property. Your details are shared with the listing agent.',
+);
+
+const contactStorageKey = computed(() => {
+    if (props.propertyId) {
+        return `ocean_contact_ok_${props.propertyId}`;
+    }
+    if (props.agentId) {
+        return `ocean_contact_ok_agent_${props.agentId}`;
+    }
+    return null;
 });
 
 const loadSavedProfile = () => {
@@ -127,6 +174,13 @@ const channelLabel = () => {
     return 'WhatsApp';
 };
 
+const buildLeadMessage = () => {
+    if (isAgentProfile.value) {
+        return `Agent profile contact (${channelLabel()}): ${props.agentName || 'Agent'}`;
+    }
+    return `Property contact (${channelLabel()}): ${props.propertyTitle}`;
+};
+
 const proceed = async () => {
     if (!validate()) return;
     submitting.value = true;
@@ -142,20 +196,32 @@ const proceed = async () => {
 
     try {
         sessionStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-        sessionStorage.setItem(`ocean_contact_ok_${props.propertyId}`, '1');
+        if (contactStorageKey.value) {
+            sessionStorage.setItem(contactStorageKey.value, '1');
+        }
 
-        await axios.post('/api/leads', {
-            property_id: props.propertyId,
+        const payload = {
             name: profile.name,
             email: profile.email,
             phone: fullPhone.value,
             is_real_estate_agent: profile.isRealEstateAgent,
-            message: `Property contact (${channelLabel()}): ${props.propertyTitle}`,
+            message: buildLeadMessage(),
             source: 'web',
             contact_channel: props.channel,
-        });
+        };
 
-        emit('success', { channel: props.channel });
+        if (props.propertyId) {
+            payload.property_id = props.propertyId;
+        } else if (props.agentId) {
+            payload.agent_id = props.agentId;
+        }
+
+        const { data } = await axios.post('/api/leads', payload);
+
+        emit('success', {
+            channel: props.channel,
+            contact: data.contact ?? null,
+        });
         emit('close');
     } catch (e) {
         const msg =
@@ -294,7 +360,7 @@ const setAgentAnswer = (value) => {
                     <p v-if="errors.form" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{{ errors.form }}</p>
 
                     <p class="text-[11px] leading-relaxed text-text-muted">
-                        By continuing, you agree we may contact you about this property. Your details are shared with the listing agent.
+                        {{ disclaimerText }}
                     </p>
 
                     <button

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\SitemapController;
 use App\Http\Requests\StoreBlogPostRequest;
 use App\Http\Requests\UpdateBlogPostRequest;
 use App\Models\BlogPost;
@@ -59,7 +60,7 @@ class BlogPostController extends Controller
                 'user_id' => $request->user()->id,
             ]));
         });
-        Cache::forget('sitemap.xml');
+        SitemapController::clearCache();
 
         return redirect()->route('admin.blog.index')->with('message', 'Blog post created successfully.');
     }
@@ -79,7 +80,7 @@ class BlogPostController extends Controller
             $data = $this->prepareData($data, $request, $blog);
             $blog->update($data);
         });
-        Cache::forget('sitemap.xml');
+        SitemapController::clearCache();
 
         return redirect()->route('admin.blog.index')->with('message', 'Blog post updated successfully.');
     }
@@ -87,7 +88,7 @@ class BlogPostController extends Controller
     public function destroy(BlogPost $blog): RedirectResponse
     {
         $blog->delete();
-        Cache::forget('sitemap.xml');
+        SitemapController::clearCache();
 
         return redirect()->route('admin.blog.index')->with('message', 'Blog post deleted.');
     }

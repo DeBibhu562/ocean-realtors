@@ -11,12 +11,32 @@ class SeoLandingPageFactory
     {
         $pages = [];
 
-        foreach (config('seo_landing_areas', []) as $definition) {
+        foreach (self::areaDefinitions() as $definition) {
             $slug = '3-bhk-builder-floor-for-sale-in-'.$definition['slug_key'];
             $pages[$slug] = self::build($definition);
         }
 
         return $pages;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public static function areaDefinitions(): array
+    {
+        $definitions = config('seo_landing_areas', []);
+        $existingSlugs = array_flip(array_column($definitions, 'slug_key'));
+
+        foreach (SeoLandingAreaExpander::expandAll(config('seo_landing_bulk_list', [])) as $definition) {
+            if (isset($existingSlugs[$definition['slug_key']])) {
+                continue;
+            }
+
+            $definitions[] = $definition;
+            $existingSlugs[$definition['slug_key']] = true;
+        }
+
+        return $definitions;
     }
 
     /**

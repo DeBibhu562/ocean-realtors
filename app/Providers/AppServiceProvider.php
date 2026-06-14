@@ -9,6 +9,8 @@ use App\Models\Property;
 use App\Observers\PropertyObserver;
 use App\Services\Geocoding\GeocoderInterface;
 use App\Services\Geocoding\GoogleGeocoder;
+use App\Support\SeoLandingFourBhkPageFactory;
+use App\Support\SeoLandingPlotPageFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Vite;
@@ -29,6 +31,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        config([
+            'seo_landing_pages.pages' => array_merge(
+                config('seo_landing_pages.pages', []),
+                SeoLandingPlotPageFactory::all(),
+                SeoLandingFourBhkPageFactory::all(),
+            ),
+        ]);
+
         Vite::prefetch(concurrency: 3);
 
         Event::listen(LeadCreated::class, SendNewLeadNotification::class);

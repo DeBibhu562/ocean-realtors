@@ -10,6 +10,23 @@ import { siteContact, whatsappUrl } from '@/config/site';
 
 const props = defineProps({ page: { type: Object, required: true } });
 
+const listingType = computed(() => props.page.listing_type || 'builder_floor');
+const isPlot = computed(() => listingType.value === 'plot');
+const isFourBhk = computed(() => listingType.value === '4bhk_builder_floor');
+const cta = computed(() => props.page.cta ?? {});
+
+const whyHeading = computed(() => props.page.why_heading || (isPlot.value
+    ? `Why buy a plot in ${props.page.area} with Ocean Realtors?`
+    : isFourBhk.value
+        ? `Why buy a 4 BHK builder floor in ${props.page.area} with Ocean Realtors?`
+        : `Why buy a 3 BHK builder floor in ${props.page.area} with Ocean Realtors?`));
+
+const heroWhatsapp = computed(() => cta.value.whatsapp || (isPlot.value
+    ? `Hi Ocean Realtors, I am looking for plots for sale in ${props.page.area}.`
+    : isFourBhk.value
+        ? `Hi Ocean Realtors, I need 4 BHK builder floors for sale in ${props.page.area}.`
+        : `Hi Ocean Realtors, I need 3 BHK builder floors for sale in ${props.page.area}.`));
+
 const featureIcons = {
     spark: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
     tag: 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z',
@@ -42,13 +59,15 @@ const scrollToEnquiry = () => {
         <PageSeoHead :title="page.meta_title || page.title" :description="page.meta_description" :path="page.path" :image="page.hero_image" exact-title :json-ld="jsonLd" />
         <StaticPageHero :badge="page.hero_badge" :title="page.title" :subtitle="page.hero_subtitle" :image="page.hero_image">
             <div class="mt-6 flex w-full max-w-md mx-auto flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 px-2">
-                <button type="button" class="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-primary-hover transition" @click="scrollToEnquiry">Get shortlist from Ocean Realtors</button>
-                <a :href="whatsappUrl(`Hi Ocean Realtors, I need 3 BHK builder floors for sale in ${page.area}.`)" target="_blank" rel="noopener noreferrer" class="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border border-white/40 bg-emerald-500 px-6 py-3.5 text-sm font-bold text-white hover:bg-emerald-600 transition">WhatsApp Ocean Realtors</a>
+                <button type="button" class="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl bg-primary px-6 py-3.5 text-sm font-bold text-white shadow-lg hover:bg-primary-hover transition" @click="scrollToEnquiry">
+                    {{ cta.hero_primary || (isPlot ? 'Get plot shortlist from Ocean Realtors' : isFourBhk ? 'Get 4 BHK shortlist from Ocean Realtors' : 'Get shortlist from Ocean Realtors') }}
+                </button>
+                <a :href="whatsappUrl(heroWhatsapp)" target="_blank" rel="noopener noreferrer" class="w-full sm:flex-1 inline-flex items-center justify-center rounded-xl border border-white/40 bg-emerald-500 px-6 py-3.5 text-sm font-bold text-white hover:bg-emerald-600 transition">WhatsApp Ocean Realtors</a>
             </div>
         </StaticPageHero>
         <section class="bg-white border-b border-gray-100 py-3 sm:py-4">
             <div class="container max-w-6xl mx-auto px-4 text-center text-xs sm:text-sm text-text-secondary leading-relaxed">
-                Trusted by buyers across Gurgaon — <strong class="text-navy">Ocean Realtors</strong> · Off-market access · Verified papers
+                Trusted by {{ isPlot ? 'land buyers' : isFourBhk ? 'spacious-home buyers' : 'buyers' }} across Gurgaon — <strong class="text-navy">Ocean Realtors</strong> · Off-market access · Verified papers
             </div>
         </section>
         <section class="section-y-sm bg-surface pb-24 lg:pb-12">
@@ -56,7 +75,7 @@ const scrollToEnquiry = () => {
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
                     <aside class="lg:col-span-4 xl:col-span-4 order-1 lg:order-2">
                         <div class="lg:sticky lg:top-24 space-y-5">
-                            <SeoLandingEnquiryForm :page-title="page.title" :page-slug="page.slug" :area-name="page.area" :intent="page.intent || 'buy'" :city="page.city || 'Gurgaon'" />
+                            <SeoLandingEnquiryForm :page-title="page.title" :page-slug="page.slug" :area-name="page.area" :intent="page.intent || 'buy'" :city="page.city || 'Gurgaon'" :listing-type="page.listing_type || 'builder_floor'" />
                             <div class="hidden sm:block rounded-2xl border border-gray-100 bg-white p-5 text-sm text-text-secondary shadow-sm">
                                 <p class="font-bold text-navy mb-2">Ocean Realtors office</p>
                                 <p class="leading-relaxed">{{ siteContact.address.full }}</p>
@@ -67,7 +86,7 @@ const scrollToEnquiry = () => {
                     </aside>
                     <div class="lg:col-span-8 xl:col-span-8 order-2 lg:order-1 space-y-8 sm:space-y-10 min-w-0">
                         <div>
-                            <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-navy mb-3 leading-tight">Why buy a 3 BHK builder floor in {{ page.area }} with Ocean Realtors?</h2>
+                            <h2 class="text-xl sm:text-2xl md:text-3xl font-black text-navy mb-3 leading-tight">{{ whyHeading }}</h2>
                             <p class="text-sm sm:text-base text-text-secondary leading-relaxed mb-6 sm:mb-8">{{ page.why_intro }}</p>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                                 <article v-for="feature in page.features" :key="feature.title" class="p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-primary/20 transition-all">
@@ -79,9 +98,29 @@ const scrollToEnquiry = () => {
                                 </article>
                             </div>
                         </div>
-                        <SeoLandingCta :area-name="page.area" :headline="`Ready for your ${page.area} shortlist? Ocean Realtors is one form away.`" subline="Tell us your budget and possession timeline — we match you with verified 3 BHK builder floors, including off-market homes." />
-                        <SeoLandingGuideSection :area="page.area" :guide-lead="page.guide_lead" :guide-body="page.guide_body" :location-detail="page.location_detail" :highlights="page.highlights" />
-                        <SeoLandingCta variant="banner" :area-name="page.area" :headline="`Ocean Realtors — your ${page.area} buying desk`" subline="20% smarter pricing · Off-market inventory · Dedicated agent · Papers checked before you pay token." :whatsapp-message="`Hi Ocean Realtors, I want to buy a 3 BHK builder floor in ${page.area}. Please call me.`" />
+                        <SeoLandingCta
+                            :area-name="page.area"
+                            :headline="`Ready for your ${page.area} shortlist? Ocean Realtors is one form away.`"
+                            :subline="cta.mid_subline || (isPlot ? `Tell us your budget and preferred plot size — we match you with verified land parcels in ${page.area}, including off-market listings.` : isFourBhk ? `Tell us your budget, bedroom layout, and possession timeline — we match you with verified 4 BHK builder floors in ${page.area}, including off-market homes.` : `Tell us your budget and possession timeline — we match you with verified 3 BHK builder floors, including off-market homes.`)"
+                        />
+                        <SeoLandingGuideSection
+                            :area="page.area"
+                            :guide-lead="page.guide_lead"
+                            :guide-body="page.guide_body"
+                            :location-detail="page.location_detail"
+                            :highlights="page.highlights"
+                            :listing-type="page.listing_type || 'builder_floor'"
+                            :guide-heading="page.guide_heading"
+                            :guide-highlight="page.guide_highlight"
+                            :process-steps="page.process_steps"
+                        />
+                        <SeoLandingCta
+                            variant="banner"
+                            :area-name="page.area"
+                            :headline="`Ocean Realtors — your ${page.area} ${isPlot ? 'land buying' : isFourBhk ? '4 BHK buying' : 'buying'} desk`"
+                            :subline="cta.banner_subline || (isPlot ? '20% smarter land pricing · Off-market parcels · Dedicated agent · Papers checked before you pay token.' : isFourBhk ? '20% smarter pricing · Off-market spacious floors · Dedicated agent · Papers checked before you pay token.' : '20% smarter pricing · Off-market inventory · Dedicated agent · Papers checked before you pay token.')"
+                            :whatsapp-message="cta.banner_whatsapp || heroWhatsapp"
+                        />
                         <div>
                             <h2 class="text-xl sm:text-2xl font-bold text-navy mb-4 sm:mb-6">Frequently asked questions</h2>
                             <div class="space-y-3 sm:space-y-4">
@@ -94,7 +133,11 @@ const scrollToEnquiry = () => {
                                 </details>
                             </div>
                         </div>
-                        <SeoLandingCta :area-name="page.area" :headline="`Still comparing 3 BHK floors in ${page.area}? Let Ocean Realtors narrow it down.`" subline="No spam — one dedicated consultant, multiple verified options, and transparent next steps." />
+                        <SeoLandingCta
+                            :area-name="page.area"
+                            :headline="cta.footer_headline || (isPlot ? `Still comparing plots in ${page.area}? Let Ocean Realtors narrow it down.` : isFourBhk ? `Still comparing 4 BHK floors in ${page.area}? Let Ocean Realtors narrow it down.` : `Still comparing 3 BHK floors in ${page.area}? Let Ocean Realtors narrow it down.`)"
+                            subline="No spam — one dedicated consultant, multiple verified options, and transparent next steps."
+                        />
                     </div>
                 </div>
             </div>

@@ -7,30 +7,69 @@ const props = defineProps({
     guideBody: { type: String, required: true },
     locationDetail: { type: String, default: '' },
     highlights: { type: Array, default: () => [] },
+    listingType: { type: String, default: 'builder_floor' },
+    guideHeading: { type: String, default: '' },
+    guideHighlight: { type: String, default: '' },
+    processSteps: { type: Array, default: null },
 });
 
-const processSteps = computed(() => [
-    { title: 'Requirement call', description: 'Budget, floor preference, loan readiness, and move-in timeline.' },
-    { title: 'Curated shortlist', description: `On-market and off-market 3 BHK options in ${props.area}, shared with clear price rationale.` },
-    { title: 'Site visits', description: 'Coordinated tours with your dedicated Ocean Realtors agent.' },
-    { title: 'Paper review', description: 'Initial title and society transfer checks before token.' },
-    { title: 'Negotiation & close', description: 'Support through agreement, NOC, and handover milestones.' },
-]);
+const heading = computed(() => props.guideHeading || (props.listingType === 'plot'
+    ? `Plots for sale in ${props.area} — what land buyers should know`
+    : props.listingType === '4bhk_builder_floor'
+        ? `4 BHK builder floors for sale in ${props.area} — what spacious-home buyers should know`
+        : `3 BHK builder floors for sale in ${props.area} — what buyers should know`));
+
+const highlightText = computed(() => props.guideHighlight || (props.listingType === 'plot'
+    ? `A residential plot for sale in ${props.area} offers flexibility to design your home or hold land as a long-term Gurgaon asset.`
+    : props.listingType === '4bhk_builder_floor'
+        ? `A 4 BHK builder floor for sale in ${props.area} delivers room for extended families, home offices, and terrace living — with independent low-rise privacy that high-rise stock rarely matches.`
+        : `A typical 3 BHK builder floor for sale in ${props.area} offers spacious family layouts — often with terrace access, dedicated parking, and strong Gurgaon connectivity.`));
+
+const defaultProcessSteps = computed(() => {
+    if (props.processSteps?.length) return props.processSteps;
+
+    if (props.listingType === 'plot') {
+        return [
+            { title: 'Land requirement call', description: 'Budget, preferred plot size, build vs investment intent, and timeline.' },
+            { title: 'Parcel shortlist', description: `On-market and off-market plots in ${props.area}, shared with price per sq yd rationale.` },
+            { title: 'Site inspection', description: 'Coordinated visits to verify boundaries, road access, and neighbourhood context.' },
+            { title: 'Title & approval review', description: 'Ownership chain, transfer path, and encumbrance basics before token.' },
+            { title: 'Negotiation & registration', description: 'Support through offer, agreement, and registration milestones.' },
+        ];
+    }
+
+    if (props.listingType === '4bhk_builder_floor') {
+        return [
+            { title: 'Spacious-home requirement call', description: 'Budget, bedroom layout, servant-room need, parking count, and move-in timeline.' },
+            { title: '4 BHK shortlist', description: `On-market and off-market 4 BHK builder floors in ${props.area}, shared with sq-ft rationale and layout notes.` },
+            { title: 'Coordinated site visits', description: 'Floor plate walkthrough, terrace access, and neighbourhood context on every visit.' },
+            { title: 'Paper review', description: 'Initial title and society transfer checks before token.' },
+            { title: 'Negotiation & close', description: 'Support through agreement, NOC, and handover milestones.' },
+        ];
+    }
+
+    return [
+        { title: 'Requirement call', description: 'Budget, floor preference, loan readiness, and move-in timeline.' },
+        { title: 'Curated shortlist', description: `On-market and off-market 3 BHK options in ${props.area}, shared with clear price rationale.` },
+        { title: 'Site visits', description: 'Coordinated tours with your dedicated Ocean Realtors agent.' },
+        { title: 'Paper review', description: 'Initial title and society transfer checks before token.' },
+        { title: 'Negotiation & close', description: 'Support through agreement, NOC, and handover milestones.' },
+    ];
+});
 </script>
 
 <template>
     <section class="rounded-2xl border border-gray-100 bg-white shadow-sm overflow-hidden" aria-labelledby="buyer-guide-heading">
         <div class="border-b border-gray-100 bg-gradient-to-r from-primary/5 to-transparent px-5 py-5 sm:px-8 sm:py-6">
             <p class="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-primary mb-2">Buyer guide</p>
-            <h2 id="buyer-guide-heading" class="text-xl sm:text-2xl font-black text-navy leading-tight">3 BHK builder floors for sale in {{ area }} — what buyers should know</h2>
+            <h2 id="buyer-guide-heading" class="text-xl sm:text-2xl font-black text-navy leading-tight">{{ heading }}</h2>
         </div>
         <div class="px-5 py-6 sm:px-8 sm:py-8 space-y-8">
             <div class="space-y-4 text-sm sm:text-base text-text-secondary leading-relaxed">
                 <p>{{ guideLead }}</p>
                 <div class="rounded-xl border border-primary/15 bg-primary/5 px-4 py-4 sm:px-5 sm:py-5">
                     <p class="text-sm sm:text-[15px] text-navy leading-relaxed">
-                        A typical <strong class="font-bold text-navy">3 BHK builder floor for sale in {{ area }}</strong>
-                        offers spacious family layouts — often with terrace access, dedicated parking, and strong Gurgaon connectivity.
+                        {{ highlightText }}
                         <span v-if="locationDetail" class="block mt-2 text-text-secondary font-normal">{{ locationDetail }}.</span>
                     </p>
                 </div>
@@ -55,10 +94,10 @@ const processSteps = computed(() => [
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary" aria-hidden="true">
                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
                     </span>
-                    <h3 class="text-lg sm:text-xl font-bold text-navy leading-snug">How our buying process works</h3>
+                    <h3 class="text-lg sm:text-xl font-bold text-navy leading-snug">{{ listingType === 'plot' ? 'How our land buying process works' : listingType === '4bhk_builder_floor' ? 'How our 4 BHK buying process works' : 'How our buying process works' }}</h3>
                 </div>
                 <ol class="space-y-3">
-                    <li v-for="(step, index) in processSteps" :key="step.title" class="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
+                    <li v-for="(step, index) in defaultProcessSteps" :key="step.title" class="flex gap-4 rounded-xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
                         <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-navy text-sm font-bold text-white" aria-hidden="true">{{ index + 1 }}</span>
                         <div class="min-w-0 pt-0.5">
                             <p class="font-bold text-navy text-sm sm:text-base">{{ step.title }}</p>

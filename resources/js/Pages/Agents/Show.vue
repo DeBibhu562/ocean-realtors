@@ -1,31 +1,44 @@
 <script setup>
+import { toRef } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Components/AppLayout.vue';
 import PropertyCard from '@/Components/PropertyCard.vue';
 import PageSeoHead from '@/Components/PageSeoHead.vue';
+import QuickContactModal from '@/Components/property/QuickContactModal.vue';
+import { useAgentContactLead } from '@/Composables/useAgentContactLead';
 
 const props = defineProps({
     agent: Object,
     properties: Array,
 });
 
-const telLink = (phone) => {
-    const cleaned = String(phone || '').replace(/[^\d+]/g, '');
-    return cleaned ? `tel:${cleaned}` : '#';
-};
+const agentRef = toRef(props, 'agent');
 
-const waLink = (phone) => {
-    const num = String(phone || '').replace(/\D/g, '');
-    if (!num) return '#';
-    return `https://wa.me/${num}?text=${encodeURIComponent('Hi, I found your profile on Ocean Realtors.')}`;
-};
+const {
+    modalOpen,
+    modalReady,
+    channel,
+    showPhone,
+    isUnlocked,
+    phoneDisplay,
+    hasContact,
+    callLink,
+    waLink,
+    requestContact,
+    closeModal,
+    handleLeadSuccess,
+} = useAgentContactLead(agentRef);
+
+const onCall = () => requestContact('call');
+const onWhatsApp = () => requestContact('whatsapp');
+const onLeadSuccess = (payload) => handleLeadSuccess(payload);
 </script>
 
 <template>
     <AppLayout :title="agent.name">
         <PageSeoHead
             :title="`${agent.name} — Property Consultant`"
-            :description="`Contact ${agent.name}, ${agent.designation || 'Ocean Realtors agent'} in ${agent.city || 'Gurgaon'}. Call or WhatsApp for property viewings.`"
+            :description="`Contact ${agent.name}, ${agent.designation || 'Ocean Realtors agent'} in ${agent.city || 'Gurgaon'}. Enquire for property viewings and expert advice.`"
             :path="`/agents/${agent.slug}`"
             :image="agent.avatar"
         />
@@ -44,13 +57,49 @@ const waLink = (phone) => {
                             <span>{{ agent.listed_count }} listings</span>
                         </div>
                         <p v-if="agent.bio" class="mt-4 text-white/75 max-w-2xl text-sm leading-relaxed">{{ agent.bio }}</p>
+
+                        <p
+                            v-if="showPhone && phoneDisplay"
+                            class="mt-6 text-lg font-bold tracking-wide text-white"
+                        >
+                            {{ phoneDisplay }}
+                        </p>
+
                         <div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
-                            <a :href="telLink(agent.phone)" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary rounded-xl font-bold text-sm hover:bg-white/90 transition-colors">
-                                Call {{ agent.phone }}
-                            </a>
-                            <a :href="waLink(agent.whatsapp_phone)" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-colors">
-                                WhatsApp
-                            </a>
+                            <template v-if="isUnlocked">
+                                <a
+                                    :href="callLink"
+                                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary rounded-xl font-bold text-sm hover:bg-white/90 transition-colors"
+                                >
+                                    Call {{ phoneDisplay }}
+                                </a>
+                                <a
+                                    :href="waLink"
+                                    target="_blank"
+                                    rel="noopener"
+                                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-colors"
+                                >
+                                    WhatsApp
+                                </a>
+                            </template>
+                            <template v-else>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary rounded-xl font-bold text-sm hover:bg-white/90 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                                    :disabled="!hasContact"
+                                    @click="onCall"
+                                >
+                                    Call agent
+                                </button>
+                                <button
+                                    type="button"
+                                    class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl font-bold text-sm hover:bg-emerald-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+                                    :disabled="!hasContact"
+                                    @click="onWhatsApp"
+                                >
+                                    WhatsApp
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -64,5 +113,17 @@ const waLink = (phone) => {
             </div>
             <p v-else class="text-center text-text-secondary py-12">No active listings at the moment.</p>
         </section>
+
+        <QuickContactModal
+            v-if="modalReady"
+            :show="modalOpen"
+            :channel="channel"
+            :agent-name="agent.name"
+            :agent-id="agent.id"
+            :whatsapp-href="waLink"
+            :tel-href="callLink"
+            @close="closeModal"
+            @success="onLeadSuccess"
+        />
     </AppLayout>
 </template>

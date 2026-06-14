@@ -180,6 +180,7 @@ class PropertyController extends Controller
 
         $property = Auth::user()->properties()->create($payload);
         $property->update($this->finalizeComputedSeoPayload($property, $payload));
+        SitemapController::clearCache();
 
         return $this->redirectAfterMutation('Property created successfully.');
     }
@@ -193,6 +194,7 @@ class PropertyController extends Controller
         $payload = $this->finalizeComputedSeoPayload($property, $payload);
 
         $property->update($payload);
+        SitemapController::clearCache();
 
         return $this->redirectAfterMutation('Property updated successfully.');
     }
@@ -214,6 +216,7 @@ class PropertyController extends Controller
         $this->authorizeProperty($property);
 
         $property->delete();
+        SitemapController::clearCache();
 
         return $this->redirectAfterMutation('Property deleted successfully.');
     }
